@@ -1,0 +1,14 @@
+# Copie este arquivo para "config.properties" (na pasta software) e ajuste.
+# O config.properties NÃO deve ir para o Git (tem senha).
+
+db.url=jdbc:mysql://localhost:3306/vida_ativa?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true&connectTimeout=5000&characterEncoding=UTF-8
+db.user=root
+db.password= COLOCAR_A_SUA_SENHA_DO_BANCO
+
+# API usada pelo site dos alunos (sobe junto com o software)
+api.port=8080
+api.autostart=true
+# Segredo para assinar os tokens de login. Troque por um texto longo e aleatório.
+api.secret=troque-este-segredo-por-algo-longo-e-aleatorio
+# Endereço do site (CORS). Ex.: http://localhost:5500 (Live Server) ou http://localhost:8000
+api.cors.origin=*

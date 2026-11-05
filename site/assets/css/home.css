@@ -1,0 +1,226 @@
+@import url('base.css');
+
+/* =========================================================
+   home.css — Página inicial (pages/home.html)
+   Seções: paleta escura · cabeçalho · hero · seções gerais ·
+           responsivo · acessos por perfil
+   Os valores abaixo sobrescrevem as variáveis de base.css só
+   nesta página; nenhum outro seletor precisa mudar.
+   ========================================================= */
+:root {
+    --fundo: #14150F;
+    --superficie: #1B1D17;
+    --linha: #2A2C24;
+    --texto: #D8DAD1;
+    --texto-suave: #8B8F84;
+    --marca: #3E9A5F;
+    --marca-escura: #2E7A48;
+    --marca-clara: #1B2A1F;
+}
+
+h1, h2, h3 {
+    color: #FFFFFF;
+}
+
+/* ===== Cabeçalho / navegação ===== */
+.cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 18px 6%;
+    background: #0E0F0B;
+    border-bottom: 1px solid var(--linha);
+}
+
+.marca-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.marca-nav img {
+    width: 84px;
+    border-radius: var(--raio-painel);
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a {
+    color: var(--texto);
+    text-decoration: none;
+    font-size: 14.5px;
+    font-weight: 600;
+    padding-bottom: 3px;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-links a:hover {
+    border-color: var(--marca);
+}
+
+/* ===== Hero ===== */
+.hero {
+    width: min(1180px, 92%);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 56px;
+    padding: 72px 0 64px;
+}
+
+.hero h1 {
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.15;
+    max-width: 15ch;
+}
+
+.hero p.introducao {
+    font-size: 17.5px;
+    max-width: 46ch;
+}
+
+.hero-acoes {
+    display: flex;
+    gap: 14px;
+    margin-top: 26px;
+}
+
+.hero-visual {
+    background: var(--marca-escura);
+    border-radius: var(--raio-painel);
+    padding: 48px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-visual img {
+    width: min(280px, 100%);
+}
+
+/* ===== Seções gerais ===== */
+.secao {
+    width: min(1180px, 92%);
+    margin: 0 auto;
+    padding: 64px 0;
+    border-top: 1px solid var(--linha);
+}
+
+.secao-titulo {
+    max-width: 56ch;
+    margin-bottom: 40px;
+}
+
+.secao-titulo h2 {
+    font-size: clamp(24px, 2.6vw, 30px);
+}
+
+/* ===== Responsivo ===== */
+@media (max-width: 900px) {
+    .hero {
+        grid-template-columns: 1fr;
+        padding-top: 46px;
+    }
+
+    .hero-visual {
+        order: -1;
+        padding: 34px;
+    }
+
+    .nav-links {
+        display: none;
+    }
+}
+
+/* ===== Acessos por perfil ===== */
+.acessos-secao {
+    width: min(1180px, 92%);
+    margin: 0 auto;
+    padding: 56px 0 70px;
+    border-top: 1px solid var(--linha);
+}
+
+.acessos-cabecalho {
+    max-width: 64ch;
+    margin-bottom: 26px;
+}
+
+.eyebrow {
+    color: var(--marca);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    margin-bottom: 8px;
+}
+
+.acessos-cabecalho h2 {
+    font-size: clamp(25px, 3vw, 34px);
+}
+
+.acessos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.acesso-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 16px;
+    min-height: 150px;
+    padding: 22px;
+    background: var(--superficie);
+    border: 1px solid var(--linha);
+    border-radius: var(--raio-painel);
+    color: var(--texto);
+    text-decoration: none;
+    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.acesso-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--marca);
+    background: var(--marca-clara);
+}
+
+.acesso-numero {
+    color: var(--marca);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+
+.acesso-card h3 {
+    font-family: var(--fonte-interface);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--texto);
+    margin-bottom: 6px;
+}
+
+.acesso-card p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.acesso-seta {
+    color: var(--marca);
+    font-size: 20px;
+    line-height: 1;
+}
+
+@media (max-width: 900px) {
+    .acessos-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Ativa - Área do Aluno</title>
+    <link rel="stylesheet" href="../assets/css/base.css">
+    <link rel="stylesheet" href="../assets/css/aluno.css">
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+</head>
+<body class="pagina-aluno">
+    <header class="topo-aluno">
+        <div class="marca-aluno">
+            <img src="../assets/img/logo.jpeg" alt="Vida Ativa">
+            <span>Área do aluno</span>
+        </div>
+        <div class="topo-acoes">
+            <span id="nomeTopo">Olá!</span>
+            <button class="btn-sair-aluno" id="btnSair" type="button">Sair</button>
+        </div>
+    </header>
+
+    <main class="conteudo-aluno">
+        <div class="aviso-erro" id="avisoErro" role="alert" hidden></div>
+
+        <section class="cabecalho-aluno">
+            <div>
+                <p class="eyebrow">MEU ESPAÇO</p>
+                <h1>Olá, <span id="nomeAluno">…</span>!</h1>
+                <p>Acompanhe seu plano, seu treino e suas mensalidades na Vida Ativa.</p>
+            </div>
+            <div class="status-aluno" id="statusAluno">
+                <span></span>
+                <b id="statusTexto">Carregando…</b>
+            </div>
+        </section>
+
+        <section class="resumo-aluno">
+            <article class="card plano-card">
+                <div class="card-topo">
+                    <div>
+                        <span class="label-card">MEU PLANO</span>
+                        <h2 id="nomePlano">…</h2>
+                    </div>
+                    <span class="icone-card">✓</span>
+                </div>
+                <div class="dias-restantes">
+                    <strong id="diasRestantes">—</strong>
+                    <span id="rotuloDias">dias até o vencimento</span>
+                </div>
+                <div class="barra"><div id="barraPlano"></div></div>
+                <div class="datas-plano">
+                    <span>Cliente desde: <strong id="dataInicio">—</strong></span>
+                    <span>Vencimento: <strong id="dataFim">—</strong></span>
+                </div>
+            </article>
+
+            <article class="card frequencia-card">
+                <span class="label-card">AVALIAÇÃO FÍSICA</span>
+                <div class="numero-frequencia">
+                    <strong id="imcValor">—</strong>
+                    <span>IMC</span>
+                </div>
+                <p id="avaliacaoResumo">Nenhuma avaliação registrada ainda.</p>
+            </article>
+
+            <article class="card proxima-card">
+                <span class="label-card">REVISÃO DA FICHA</span>
+                <div class="aula-data">
+                    <strong id="revisaoDia">—</strong>
+                    <span id="revisaoMes"></span>
+                </div>
+                <div>
+                    <h3 id="revisaoTitulo">Sem ficha ativa</h3>
+                    <p id="revisaoDetalhe">Fale com o seu professor.</p>
+                </div>
+            </article>
+        </section>
+
+        <section class="grid-principal">
+            <article class="painel">
+                <div class="painel-header">
+                    <div>
+                        <h2>Minhas avaliações</h2>
+                        <p>Histórico das suas avaliações físicas.</p>
+                    </div>
+                </div>
+                <div class="lista-aulas" id="listaAvaliacoes">
+                    <p class="vazio-texto">Carregando…</p>
+                </div>
+            </article>
+
+            <article class="painel pagamento-painel">
+                <div class="painel-header">
+                    <div>
+                        <h2>Pagamento</h2>
+                        <p>Situação da sua mensalidade.</p>
+                    </div>
+                    <span class="pago" id="chipPagamento">—</span>
+                </div>
+                <div class="pagamento-info">
+                    <span>Próximo vencimento</span>
+                    <strong id="pagVencimento">—</strong>
+                </div>
+                <div class="linha-info">
+                    <span>Valor da mensalidade</span>
+                    <strong id="pagValor">—</strong>
+                </div>
+                <div class="linha-info">
+                    <span>Forma de pagamento</span>
+                    <strong id="pagForma">—</strong>
+                </div>
+                <a class="btn-principal-aluno" href="pagamento.html">Ver pagamentos</a>
+            </article>
+        </section>
+
+        <section class="grid-secundario">
+            <article class="painel">
+                <div class="painel-header">
+                    <div>
+                        <h2>Meu treino</h2>
+                        <p id="treinoSubtitulo">Seu treino atual.</p>
+                    </div>
+                    <span class="treino-status" id="treinoStatus">—</span>
+                </div>
+                <div class="treino-lista" id="treinoLista">
+                    <p class="vazio-texto">Carregando…</p>
+                </div>
+                <button class="btn-secundario-aluno" id="btnTreino" type="button" disabled>Ver treino completo</button>
+            </article>
+
+            <article class="painel dados-painel">
+                <div class="painel-header">
+                    <div>
+                        <h2>Meus dados</h2>
+                        <p>Informações do seu cadastro.</p>
+                    </div>
+                </div>
+                <p class="dados-privados">Seus dados cadastrais ficam protegidos e só aparecem quando você solicitar a visualização.</p>
+                <button class="btn-secundario-aluno" id="btnDados" type="button">Visualizar meus dados</button>
+                <button class="btn-secundario-aluno" id="btnSenha" type="button">Alterar minha senha</button>
+            </article>
+        </section>
+    </main>
+
+    <div class="modal-backdrop" id="modalTreino" hidden>
+        <section class="modal-aluno" role="dialog" aria-modal="true" aria-labelledby="tituloTreino">
+            <button class="modal-fechar" type="button" data-fechar="modalTreino" aria-label="Fechar treino">&times;</button>
+            <p class="eyebrow">FICHA COMPLETA</p>
+            <h2 id="tituloTreino">Treino</h2>
+            <p class="modal-intro" id="treinoIntro">Siga a ordem dos exercícios e respeite os intervalos para manter a qualidade do treino.</p>
+            <div class="treino-completo" id="treinoCompleto"></div>
+        </section>
+    </div>
+
+    <div class="modal-backdrop" id="modalDados" hidden>
+        <section class="modal-aluno" role="dialog" aria-modal="true" aria-labelledby="tituloDados">
+            <button class="modal-fechar" type="button" data-fechar="modalDados" aria-label="Fechar dados">&times;</button>
+            <p class="eyebrow">CADASTRO</p>
+            <h2 id="tituloDados">Meus dados</h2>
+            <div class="dados-grid dados-grid-modal">
+                <div><span>Nome</span><strong id="dadoNome">—</strong></div>
+                <div><span>E-mail</span><strong id="dadoEmail">—</strong></div>
+                <div><span>Telefone</span><strong id="dadoTelefone">—</strong></div>
+                <div><span>Plano</span><strong id="dadoPlano">—</strong></div>
+                <div><span>Tipo de cliente</span><strong id="dadoTipo">—</strong></div>
+                <div><span>Cliente desde</span><strong id="dadoDesde">—</strong></div>
+            </div>
+            <p class="modal-intro">Para corrigir algum dado, fale com a recepção da academia.</p>
+        </section>
+    </div>
+
+    <div class="modal-backdrop" id="modalSenha" hidden>
+        <section class="modal-aluno" role="dialog" aria-modal="true" aria-labelledby="tituloSenha">
+            <button class="modal-fechar" type="button" data-fechar="modalSenha" aria-label="Fechar">&times;</button>
+            <p class="eyebrow">SEGURANÇA</p>
+            <h2 id="tituloSenha">Alterar senha</h2>
+            <form class="form-modal" id="formSenha" novalidate>
+                <label>Senha atual<input type="password" id="senhaAtual" autocomplete="current-password" required></label>
+                <label>Nova senha (mínimo 6 caracteres)<input type="password" id="novaSenha" autocomplete="new-password" minlength="6" required></label>
+                <label>Repita a nova senha<input type="password" id="novaSenha2" autocomplete="new-password" required></label>
+                <p class="mensagem-form" id="msgSenha" role="status"></p>
+                <button class="btn-principal-aluno" type="submit" id="btnSalvarSenha">Salvar nova senha</button>
+            </form>
+        </section>
+    </div>
+
+    <footer class="rodape">
+        <div class="rodape-linhas">
+            <p>&copy; Vida Ativa. 2007 Vida Ativa Ltda. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="../assets/js/aluno.js"></script>
+</body>
+</html>

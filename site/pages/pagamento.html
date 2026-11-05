@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Ativa - Pagamentos</title>
+    <link rel="stylesheet" href="../assets/css/base.css">
+    <link rel="stylesheet" href="../assets/css/aluno.css">
+    <link rel="stylesheet" href="../assets/css/pagamento.css">
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+</head>
+<body class="pagina-aluno pagina-pagamento">
+    <header class="topo-aluno">
+        <div class="marca-aluno">
+            <a href="aluno.html"><img src="../assets/img/logo.jpeg" alt="Vida Ativa"></a>
+            <span>Pagamentos</span>
+        </div>
+        <div class="topo-acoes">
+            <span id="nomeTopo">Olá!</span>
+            <a class="btn-sair-aluno" href="aluno.html">Voltar</a>
+        </div>
+    </header>
+
+    <main class="conteudo-aluno pagamento-conteudo">
+        <div class="aviso-erro" id="avisoErro" role="alert" hidden></div>
+
+        <section class="cabecalho-aluno">
+            <div>
+                <p class="eyebrow">FINANCEIRO</p>
+                <h1>Suas mensalidades</h1>
+                <p>Consulte o histórico e a situação de cada mensalidade.</p>
+            </div>
+            <span class="status-aluno" id="statusAluno"><span></span><b id="statusTexto">Carregando…</b></span>
+        </section>
+
+        <section class="pagamento-layout">
+            <article class="painel faturas-painel">
+                <div class="painel-header">
+                    <div><h2>Faturas</h2><p>Da mais recente para a mais antiga.</p></div>
+                </div>
+                <div class="faturas-lista" id="listaFaturas">
+                    <p class="vazio-texto">Carregando…</p>
+                </div>
+            </article>
+
+            <article class="painel checkout-painel">
+                <div class="painel-header"><div><h2>Como pagar</h2><p>O pagamento é feito na recepção da academia.</p></div></div>
+                <div class="valor-fatura"><span>Mensalidade</span><strong id="valorMensalidade">—</strong></div>
+                <div class="linha-info"><span>Próximo vencimento</span><strong id="proximoVencimento">—</strong></div>
+                <div class="linha-info"><span>Forma de pagamento cadastrada</span><strong id="formaCadastrada">—</strong></div>
+                <p class="instrucoes-pagamento">
+                    Pague na recepção (Pix, cartão, boleto ou dinheiro). Assim que o funcionário registrar o recebimento,
+                    a fatura passa para <strong>Paga</strong> aqui automaticamente. Para mudar a forma de pagamento, fale com a recepção.
+                </p>
+            </article>
+        </section>
+    </main>
+
+    <script src="../assets/js/pagamento.js"></script>
+</body>
+</html>

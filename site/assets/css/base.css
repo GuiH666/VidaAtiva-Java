@@ -1,0 +1,167 @@
+/* =========================================================
+   base.css — Estilo comum do site Vida Ativa
+   Variáveis de cor (:root), tipografia, cabeçalho, botões e
+   rodapé reaproveitados por TODAS as páginas. Cada página
+   importa este arquivo e acrescenta só o que é específico dela
+   (home.css, login.css, planos.css, aluno.css, pagamento.css).
+   Para mudar a identidade visual (cores, fontes), comece aqui.
+   ========================================================= */
+
+:root {
+    /* Paleta clara — usada nas páginas públicas (Home, Login) */
+    --fundo: #F2F3EF;
+    --superficie: #FFFFFF;
+    --linha: #DEE1D9;
+    --texto: #e5ecdd;
+    --texto-suave: #5B6058;
+
+    /* Verde da marca — mais fechado que um verde neon, para
+       funcionar como texto e não só como destaque decorativo */
+    --marca: #1E7A44;
+    --marca-escura: #14532F;
+    --marca-clara: #E7F1E9;
+
+    /* Tipografia: serifada para títulos (voz editorial da marca),
+       sem serifa para interface (botões, formulários, tabelas) */
+    --fonte-titulo: Georgia, 'Times New Roman', Times, serif;
+    --fonte-interface: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+
+    --raio-controle: 6px;
+    --raio-painel: 3px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: var(--fonte-interface);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+    font-family: var(--fonte-titulo);
+    font-weight: normal;
+    color: var(--texto);
+    margin: 0 0 12px;
+}
+
+p {
+    margin: 0 0 12px;
+    color: var(--texto-suave);
+}
+
+a {
+    color: var(--marca);
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+/* ===== Botões ===== */
+.botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--fonte-interface);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 22px;
+    border-radius: var(--raio-controle);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.botao-primario {
+    background: var(--marca);
+    color: #fff;
+    border-color: var(--marca);
+}
+
+.botao-primario:hover {
+    background: var(--marca-escura);
+    border-color: var(--marca-escura);
+}
+
+.botao-secundario {
+    background: transparent;
+    color: var(--texto);
+    border-color: var(--linha);
+}
+
+.botao-secundario:hover {
+    border-color: var(--texto-suave);
+}
+
+/* ===== Formulários ===== */
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.campo label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texto);
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+    font-family: var(--fonte-interface);
+    font-size: 15px;
+    color: var(--texto);
+    background: var(--superficie);
+    border: 1px solid var(--linha);
+    border-radius: var(--raio-controle);
+    padding: 11px 13px;
+    outline: none;
+}
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+    border-color: var(--marca);
+}
+
+/* ===== Rodapé ===== */
+.rodape {
+    background: var(--marca-escura);
+    color: #E7EDE9;
+    padding: 28px 6%;
+    font-size: 13px;
+}
+
+.rodape-linhas {
+    width: min(1180px, 92%);
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.rodape a {
+    color: #E7EDE9;
+}
+
+.rodape-links {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.rodape p {
+    margin: 0;
+    color: #C7D2CB;
+}

@@ -1,0 +1,150 @@
+/* pagamento.css — Complementos da página de mensalidades (pages/pagamento.html).
+   Vem depois de aluno.css, que traz a base visual da área do aluno. */
+
+.pagina-pagamento .marca-aluno a {
+    display: block;
+}
+
+.pagina-pagamento .marca-aluno img {
+    width: 88px;
+}
+
+.pagina-pagamento .topo-acoes a {
+    text-decoration: none;
+}
+
+.pagamento-conteudo {
+    max-width: 1080px;
+}
+
+.pagamento-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 18px;
+}
+
+.faturas-lista {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.fatura {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 15px;
+    text-align: left;
+    border: 1px solid var(--painel-linha);
+    background: transparent;
+    color: var(--painel-texto);
+    cursor: pointer;
+}
+
+.fatura:hover,
+.fatura.selecionada {
+    border-color: var(--painel-marca);
+}
+
+.fatura span,
+.fatura small {
+    display: block;
+}
+
+.fatura strong {
+    color: #fff;
+    font-size: 14px;
+}
+
+.fatura small,
+.fatura i {
+    color: var(--painel-texto-suave);
+    font-size: 12px;
+    font-style: normal;
+}
+
+.fatura b {
+    color: #fff;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.valor-fatura {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--painel-linha);
+}
+
+.valor-fatura span {
+    color: var(--painel-texto-suave);
+    font-size: 13px;
+}
+
+.valor-fatura strong {
+    color: #fff;
+    font: normal 28px var(--fonte-titulo);
+}
+
+.metodo {
+    padding: 11px 8px;
+    border: 1px solid var(--painel-linha);
+    background: transparent;
+    color: var(--painel-texto);
+    cursor: pointer;
+}
+
+.metodo.ativo,
+.metodo:hover {
+    border-color: var(--painel-marca);
+    color: var(--painel-marca);
+}
+
+.instrucoes-pagamento {
+    min-height: 42px;
+    font-size: 13px;
+}
+
+@media (max-width: 760px) {
+    .pagamento-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .fatura {
+        grid-template-columns: 1fr auto;
+    }
+
+    .fatura i {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ===== Versão com dados da API: faturas somente leitura ===== */
+.fatura {
+    cursor: default;
+}
+
+.fatura:hover {
+    border-color: var(--painel-linha);
+}
+
+.fatura i.st-pago {
+    color: var(--painel-marca);
+}
+
+.fatura i.st-pendente {
+    color: #E6C780;
+}
+
+.fatura i.st-atrasado {
+    color: #E9A0A0;
+}
+
+.checkout-painel .instrucoes-pagamento {
+    color: #A5A99D;
+    line-height: 1.6;
+}

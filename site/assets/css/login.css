@@ -1,0 +1,183 @@
+@import url('base.css');
+
+/* =========================================================
+   login.css — Tela de login do aluno (pages/login.html)
+   Os valores abaixo sobrescrevem as variáveis de base.css só
+   nesta página.
+   ========================================================= */
+:root {
+    --fundo: #14150F;
+    --superficie: #1B1D17;
+    --linha: #2A2C24;
+    --texto: #D8DAD1;
+    --texto-suave: #8B8F84;
+    --marca: #3E9A5F;
+    --marca-escura: #2E7A48;
+    --marca-clara: #1B2A1F;
+}
+
+h1, h2 {
+    color: #FFFFFF;
+}
+
+.cabecalho {
+    display: flex;
+    justify-content: center;
+    padding: 22px 0;
+    background: #0E0F0B;
+    border-bottom: 1px solid var(--linha);
+}
+
+.cabecalho img {
+    width: 120px;
+    border-radius: var(--raio-painel);
+}
+
+.conteudo-login {
+    width: min(1080px, 92%);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 60px;
+    padding: 64px 0;
+    min-height: calc(100vh - 260px);
+}
+
+/* ===== Lado esquerdo: apresentação ===== */
+.apresentacao img {
+    width: 220px;
+    margin-bottom: 28px;
+}
+
+.apresentacao h2 {
+    font-size: 24px;
+    margin-bottom: 6px;
+}
+
+.apresentacao > p {
+    font-weight: 600;
+    color: var(--texto);
+    margin-bottom: 14px;
+}
+
+.apresentacao ul {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--texto-suave);
+}
+
+.apresentacao li {
+    margin-bottom: 8px;
+}
+
+/* ===== Lado direito: formulário ===== */
+.painel-login {
+    background: var(--superficie);
+    border: 1px solid var(--linha);
+    border-radius: var(--raio-painel);
+    padding: 34px;
+}
+
+.painel-login h1 {
+    font-size: 26px;
+    margin-bottom: 22px;
+}
+
+.painel-login .campo input {
+    background: #101109;
+}
+
+.painel-login form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.painel-login .botao {
+    width: 100%;
+}
+
+/* ===== Rodapé de contato ===== */
+.contato-rapido {
+    width: min(1080px, 92%);
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--texto-suave);
+    font-size: 13.5px;
+}
+
+.contato-rapido img {
+    width: 26px;
+}
+
+@media (max-width: 860px) {
+    .conteudo-login {
+        grid-template-columns: 1fr;
+        padding: 40px 0;
+    }
+
+    .apresentacao {
+        text-align: center;
+    }
+
+    .apresentacao img {
+        margin: 0 auto 22px;
+    }
+}
+
+.logo-login {
+    display: inline-flex;
+}
+
+.logo-login img {
+    width: 120px;
+    border-radius: var(--raio-painel);
+}
+
+.eyebrow-login {
+    display: inline-block;
+    color: var(--marca);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    margin-bottom: 10px;
+}
+
+.perfil-escolhido {
+    display: inline-flex;
+    margin-top: 16px;
+    padding: 8px 10px;
+    border: 1px solid var(--linha);
+    border-radius: var(--raio-controle);
+    color: var(--marca);
+    background: var(--marca-clara);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.subtitulo-login {
+    margin-top: -10px;
+}
+
+.voltar-home {
+    width: 100%;
+    margin-top: 2px;
+}
+
+.aviso-login {
+    margin: 0 0 16px;
+    padding: 11px 13px;
+    border: 1px solid #C97B7B;
+    border-radius: var(--raio-controle);
+    background: #FBEAEA;
+    color: #7A2323;
+    font-size: 14px;
+}
+
+#btnEntrar:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}

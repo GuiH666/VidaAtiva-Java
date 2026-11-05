@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Ativa — Planos</title>
+    <link rel="stylesheet" href="../assets/css/base.css">
+    <link rel="stylesheet" href="../assets/css/planos.css">
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+</head>
+<body class="pagina-planos">
+<header class="cabecalho-planos">
+    <div class="marca-nav">
+        <a href="home.html" aria-label="Voltar para a página inicial">
+            <img src="../assets/img/logo.jpeg" alt="Vida Ativa">
+        </a>
+    </div>
+    <nav>
+        <ul class="nav-links">
+            <li><a href="home.html">Início</a></li>
+            <li><a href="login.html">Área do aluno</a></li>
+            <li><a class="ativo" href="planos.html">Planos</a></li>
+        </ul>
+    </nav>
+    <a class="botao botao-secundario" href="login.html">Entrar</a>
+</header>
+
+<main>
+    <section class="hero-planos">
+        <div class="hero-inner">
+            <p class="eyebrow">VIDA ATIVA</p>
+            <h1>Escolha o nível de acompanhamento que combina com você.</h1>
+            <p class="hero-text">Três planos pensados para diferentes objetivos: da liberdade para treinar no seu ritmo ao acompanhamento mais completo da academia.</p>
+        </div>
+    </section>
+
+    <section class="planos-secao">
+        <div class="planos-header">
+            <div>
+                <p class="eyebrow">PLANOS DE TREINO</p>
+                <h2>Compare os benefícios</h2>
+            </div>
+            <p class="nota-preco">Valores ilustrativos para o projeto.</p>
+        </div>
+
+        <div class="planos-comparacao">
+            <article class="plano plano-basico">
+                <div class="plano-topo">
+                    <span class="plano-nivel">ESSENCIAL</span>
+                    <h3>Plano Básico</h3>
+                    <p>Para quem prefere treinar com independência.</p>
+                    <div class="preco"><strong data-plano-preco="Básico">R$ 89,90</strong><span>/mês</span></div>
+                </div>
+                <div class="plano-corpo">
+                    <p class="inclui">INCLUI</p>
+                    <ul>
+                        <li>Acesso livre à musculação e aeróbico</li>
+                        <li>Entrada por biometria ou QR Code</li>
+                        <li>Uso das dependências da academia</li>
+                    </ul>
+                    <div class="limites">
+                        <span>Não inclui ficha de treino com professor</span>
+                        <span>Não inclui avaliação física</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="plano plano-plus">
+                <div class="plano-topo">
+                    <span class="plano-nivel">MAIS POPULAR</span>
+                    <h3>Plano Plus</h3>
+                    <p>Mais orientação para manter o treino no caminho certo.</p>
+                    <div class="preco"><strong data-plano-preco="Plus">R$ 129,90</strong><span>/mês</span></div>
+                </div>
+                <div class="plano-corpo">
+                    <p class="inclui">TUDO DO BÁSICO +</p>
+                    <ul>
+                        <li>Apoio dos instrutores de salão</li>
+                        <li>Ficha de treino personalizada</li>
+                        <li>Orientação para execução dos exercícios</li>
+                    </ul>
+                    <div class="limites">
+                        <span>Sem avaliação física/bioimpedância</span>
+                        <span>Sem horários fixos exclusivos com professor</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="plano plano-premium">
+                <div class="plano-topo">
+                    <span class="plano-nivel">EXPERIÊNCIA COMPLETA</span>
+                    <h3>Plano Premium</h3>
+                    <p>Para quem busca acompanhamento próximo e completo.</p>
+                    <div class="preco"><strong data-plano-preco="Premium">R$ 199,90</strong><span>/mês</span></div>
+                </div>
+                <div class="plano-corpo">
+                    <p class="inclui">TUDO DO PLUS +</p>
+                    <ul>
+                        <li>Horário fixo com professor</li>
+                        <li>Ficha técnica avançada e acompanhada</li>
+                        <li>Avaliação física e bioimpedância</li>
+                        <li>Acompanhamento da evolução</li>
+                    </ul>
+                    <div class="destaque-saude">
+                        <strong>Acompanhamento responsável</strong>
+                        <span>O plano inclui o preenchimento de informações de saúde antes do acompanhamento físico.</span>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="totalpass">
+        <div class="totalpass-copy">
+            <p class="eyebrow">TOTALPASS</p>
+            <h2>É cliente TotalPass?</h2>
+            <p>O Plano Básico é o único plano com acesso sem custo adicional. Para Plus e Premium, o upgrade é cobrado à parte na recepção.</p>
+        </div>
+        <div class="totalpass-valores">
+            <div><span>Plus</span><strong>+ R$ 29,90</strong><small>upgrade sugerido</small></div>
+            <div><span>Premium</span><strong>+ R$ 49,90</strong><small>upgrade sugerido</small></div>
+        </div>
+    </section>
+
+    <section class="comparativo">
+        <div class="secao-titulo">
+            <p class="eyebrow">VISÃO RÁPIDA</p>
+            <h2>O que muda de um plano para o outro</h2>
+        </div>
+        <div class="tabela-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Benefício</th><th>Básico</th><th>Plus</th><th>Premium</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Acesso à academia</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                    <tr><td>Biometria / QR Code</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                    <tr><td>Apoio dos instrutores</td><td>—</td><td>✓</td><td>✓</td></tr>
+                    <tr><td>Ficha de treino</td><td>—</td><td>✓</td><td>✓ avançada</td></tr>
+                    <tr><td>Avaliação física</td><td>—</td><td>—</td><td>✓</td></tr>
+                    <tr><td>Horário exclusivo com professor</td><td>—</td><td>—</td><td>✓</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer class="rodape">
+    <div class="rodape-linhas">
+        <p>&copy; Vida Ativa. 2007 Vida Ativa Ltda. Todos os direitos reservados.</p>
+        <div class="rodape-links">
+            <a href="home.html">Início</a>
+            <a href="login.html">Área do aluno</a>
+        </div>
+    </div>
+</footer>
+    <script src="../assets/js/planos.js"></script>
+</body>
+</html>

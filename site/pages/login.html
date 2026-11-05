@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Ativa — Entrar</title>
+    <link rel="stylesheet" href="../assets/css/base.css">
+    <link rel="stylesheet" href="../assets/css/login.css">
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+</head>
+<body>
+    <header class="cabecalho">
+        <a class="logo-login" href="home.html" aria-label="Voltar para a Home">
+            <img src="../assets/img/logo.jpeg" alt="Vida Ativa">
+        </a>
+    </header>
+
+    <main class="conteudo-login">
+        <div class="apresentacao">
+            <img src="../assets/img/logo-nome.png" alt="Vida Ativa">
+            <span class="eyebrow-login">ÁREA DO ALUNO</span>
+            <h2>Entre na sua área</h2>
+            <p>Consulte o seu plano, o seu treino, as suas avaliações físicas e as suas mensalidades.</p>
+            <div class="perfil-escolhido">Funcionários e professores acessam pelo software da academia.</div>
+        </div>
+
+        <div class="painel-login">
+            <h1>Entrar</h1>
+            <p class="subtitulo-login">Use o usuário e a senha que a recepção cadastrou para você.</p>
+
+            <p class="aviso-login" id="avisoLogin" role="alert" hidden></p>
+
+            <form id="formLogin" novalidate>
+                <div class="campo">
+                    <label for="usuario">Usuário ou e-mail</label>
+                    <input type="text" id="usuario" name="usuario" autocomplete="username" required placeholder="Ex.: joao.silva">
+                </div>
+
+                <div class="campo">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" name="senha" autocomplete="current-password" required placeholder="Sua senha">
+                </div>
+
+                <button type="submit" class="botao botao-primario" id="btnEntrar">Entrar</button>
+                <a class="botao botao-secundario voltar-home" href="home.html">Voltar para a Home</a>
+            </form>
+        </div>
+    </main>
+
+    <div class="contato-rapido">
+        <img src="../assets/img/icone-whatsapp.png" alt="WhatsApp">
+        <span>Prefere falar com a gente? Fale pelo WhatsApp.</span>
+    </div>
+
+    <footer class="rodape">
+        <div class="rodape-linhas">
+            <p>&copy; Vida Ativa. 2007 Vida Ativa Ltda. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+    <script src="../assets/js/login.js"></script>
+</body>
+</html>

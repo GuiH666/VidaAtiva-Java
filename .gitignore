@@ -1,0 +1,11 @@
+software/config.properties
+config.properties
+target/
+out/
+*.class
+lib/
+.idea/
+*.iml
+.DS_Store
+*.log
+out-testes/
