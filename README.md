@@ -80,8 +80,3 @@ Requisitos: **JDK 21+** (`javac -version`) e **MySQL 8**.
 
 Detalhes e fluxos em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
 
-## Para quem vai continuar o projeto
-
-1. Leia `docs/ARQUITETURA.md` e `docs/GUIA-DO-CODIGO.md`.
-2. Siga `docs/CONTRIBUINDO.md` (branches, testes, checklist).
-3. Veja `docs/PROXIMOS-PASSOS.md`: lista do que melhorar (visual dos cadastros, problemas já conhecidos, funcionalidades futuras).
