@@ -1,9 +1,12 @@
 package br.com.vidaativa.ui.panels;
 
 import br.com.vidaativa.dao.AlunoDAO;
+import br.com.vidaativa.dao.PagamentoDAO;
 import br.com.vidaativa.dao.PlanoDAO;
 import br.com.vidaativa.model.Aluno;
+import br.com.vidaativa.model.Pagamento;
 import br.com.vidaativa.model.Plano;
+import br.com.vidaativa.service.HistoricoPagamentos;
 import br.com.vidaativa.service.Precificacao;
 import br.com.vidaativa.ui.*;
 import br.com.vidaativa.ui.UI.Opcao;
@@ -16,6 +19,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -40,7 +46,11 @@ public class AlunosPanel extends PainelBase {
     /** true = pode cadastrar/editar/desativar; false = só consulta (professor). */
     private final boolean editavel;
     private final AlunoDAO dao = new AlunoDAO();
-    private final JTable tabela = UI.tabela("Nome", "Documento", "Telefone", "Plano", "Tipo", "Pagamento", "Vencimento", "Status");
+    /** Quem edita (recepção e gerente) também vê a coluna "Financeiro"; o professor só consulta os dados do aluno. */
+    private final JTable tabela;
+    private final JCheckBox soAtrasados = new JCheckBox("Só em atraso");
+    /** Cobranças de cada aluno (id do aluno -> lista), para a coluna "Financeiro" e o filtro "Só em atraso". */
+    private Map<Integer, List<Pagamento>> cobrancas = new HashMap<>();
     private final JTextField busca = new JTextField(22);
     private final JCheckBox mostrarInativos = new JCheckBox("Mostrar inativos");
     /** Botão que vira "Desativar" ou "Reativar" conforme o aluno selecionado. */
@@ -55,6 +65,9 @@ public class AlunosPanel extends PainelBase {
                 editavel ? "Cadastre, edite e desative alunos. O aluno entra no site com o usuário e a senha definidos aqui."
                         : "Consulta dos alunos. O cadastro pessoal é alterado pela recepção.");
         this.editavel = editavel;
+        tabela = editavel
+                ? UI.tabela("Nome", "Documento", "Telefone", "Plano", "Tipo", "Pagamento", "Vencimento", "Financeiro", "Status")
+                : UI.tabela("Nome", "Documento", "Telefone", "Plano", "Tipo", "Pagamento", "Vencimento", "Status");
 
         // --- Barra de cima: botões à esquerda (só os de edição aparecem se editavel) e busca à direita ---
         JPanel topo = new JPanel(new BorderLayout(12, 0));
@@ -86,6 +99,12 @@ public class AlunosPanel extends PainelBase {
         mostrarInativos.addActionListener(e -> filtrar());
         direita.add(UI.rotulo("Buscar:"));
         direita.add(busca);
+        if (editavel) {
+            soAtrasados.setOpaque(false);
+            soAtrasados.setToolTipText("Mostra só os alunos que têm mensalidade atrasada");
+            soAtrasados.addActionListener(e -> filtrar());
+            direita.add(soAtrasados);
+        }
         direita.add(mostrarInativos);
         topo.add(esquerda, BorderLayout.WEST);
         topo.add(direita, BorderLayout.EAST);
@@ -96,8 +115,15 @@ public class AlunosPanel extends PainelBase {
         corpo.add(UI.rolagem(tabela), BorderLayout.CENTER);
         add(corpo, BorderLayout.CENTER);
 
-        // Coluna 7 = Status. Duplo clique abre o cadastro. Trocar a seleção atualiza o texto do botão Desativar/Reativar.
-        UI.colorirColuna(tabela, 7, s -> s.equals("Ativo") ? Theme.GREEN : Theme.MUTED);
+        // Coluna "Financeiro" (só quem edita): situação das mensalidades do aluno.
+        if (editavel) UI.colorirColuna(tabela, 7, s -> switch (s) {
+            case "Em atraso" -> Theme.DANGER;
+            case "Em dia" -> Theme.GREEN;
+            case "A vencer" -> Theme.WARN;
+            default -> Theme.MUTED;
+        });
+        // Última coluna = Status. Duplo clique abre o cadastro. Trocar a seleção atualiza o texto do botão Desativar/Reativar.
+        UI.colorirColuna(tabela, editavel ? 8 : 7, s -> s.equals("Ativo") ? Theme.GREEN : Theme.MUTED);
         tabela.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) { if (e.getClickCount() == 2) abrirSelecionado(); }
         });
@@ -109,10 +135,36 @@ public class AlunosPanel extends PainelBase {
     public void recarregar() {
         try {
             todos = dao.listar(true);
+            carregarCobrancas();
             filtrar();
         } catch (Exception e) {
             UI.erro(this, e);
         }
+    }
+
+    /** Lê as cobranças de todos os alunos de uma vez e agrupa por aluno. Se falhar, a lista de alunos continua funcionando (sem a coluna preenchida). */
+    private void carregarCobrancas() {
+        cobrancas = new HashMap<>();
+        if (!editavel) return;
+        try {
+            for (Pagamento p : new PagamentoDAO().listar(null, null)) cobrancas.computeIfAbsent(p.alunoId(), k -> new ArrayList<>()).add(p);
+        } catch (Exception e) {
+            // Sem as cobranças, a coluna mostra "Sem cobrança"; o erro real aparece ao abrir Pagamentos.
+        }
+    }
+
+    /** Código da situação financeira (ATRASADO, EM_DIA, A_VENCER, SEM_COBRANCA) do aluno, no mês atual. */
+    private String situacaoFinanceira(Aluno a) {
+        return HistoricoPagamentos.situacaoFinanceira(cobrancas.getOrDefault(a.id(), List.of()), YearMonth.now(), LocalDate.now());
+    }
+
+    private static String rotuloFinanceiro(String codigo) {
+        return switch (codigo) {
+            case "ATRASADO" -> "Em atraso";
+            case "EM_DIA" -> "Em dia";
+            case "A_VENCER" -> "A vencer";
+            default -> "Sem cobrança";
+        };
     }
 
     /** Aplica busca e "Mostrar inativos" sobre {@link #todos} e redesenha a tabela. */
@@ -132,10 +184,15 @@ public class AlunosPanel extends PainelBase {
                         || (!termoDigitos.isEmpty() && a.documento() != null && a.documento().replaceAll("\\D", "").contains(termoDigitos));
                 if (!bate) continue;
             }
+            String fin = editavel ? situacaoFinanceira(a) : "";
+            if (editavel && soAtrasados.isSelected() && !fin.equals("ATRASADO")) continue;
             visiveis.add(a);
-            m.addRow(new Object[]{a.nome(), a.documento(), UI.texto(a.telefone()), a.plano(),
-                    a.tipoCliente().equals("TOTALPASS") ? "TotalPass" : "Convencional", UI.rotuloForma(a.formaPagamento()),
-                    UI.data(a.vencimento()), a.ativo() ? "Ativo" : "Inativo"});
+            Object[] base = {a.nome(), a.documento(), UI.texto(a.telefone()), a.plano(),
+                    a.tipoCliente().equals("TOTALPASS") ? "TotalPass" : "Convencional", UI.rotuloForma(a.formaPagamento()), UI.data(a.vencimento())};
+            Object[] linha = java.util.Arrays.copyOf(base, editavel ? 9 : 8);
+            if (editavel) linha[7] = a.ativo() ? rotuloFinanceiro(fin) : "—";
+            linha[linha.length - 1] = a.ativo() ? "Ativo" : "Inativo";
+            m.addRow(linha);
         }
         atualizarBotaoAlternar();
     }

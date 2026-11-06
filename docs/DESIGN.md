@@ -45,6 +45,35 @@ Definições dos números (também no Javadoc de `service/Indicadores`):
 - **Em atraso**: todas as atrasadas, de qualquer mês. Pendente com vencimento passado conta como atrasada.
 - **% em dia**: pagas ÷ (pagas + pendentes + atrasadas) das cobranças do mês; canceladas ficam de fora.
 
+## Painel da recepção (funcionário)
+
+Indicadores: alunos ativos, cadastros hoje, recebido hoje, vencem hoje, em atraso e alunos sem mensalidade no mês. Listas: *Cobrar agora*
+(atrasos, do mais antigo), *Vencem nos próximos 7 dias*, *Sem mensalidade neste mês* (lembra de gerar as mensalidades), *Aniversariantes do mês*
+e *Últimos cadastros*. Mesmas definições do dashboard do gerente (`service/Indicadores`); "sem mensalidade" ignora TotalPass Básico (que não paga)
+e quem entrou depois do mês.
+
+## Histórico de pagamentos por aluno
+
+Em *Pagamentos* (gerente e funcionário) a lista fica à esquerda e, à direita, o histórico do aluno da cobrança selecionada:
+- Resumo: total pago, último pagamento (data e valor), em aberto, em atraso, "pagou em dia" (pagas até o vencimento ÷ pagas) e primeira cobrança.
+- Filtros: situação (Todas, Pagas, Pendentes, Atrasadas, Canceladas) e ano.
+- Tabela: vencimento, **dia em que foi pago**, valor, forma e situação — todas as cobranças daquele aluno e só dele.
+- Depois de registrar ou cancelar uma cobrança, o histórico continua aberto e já atualizado.
+
+Na lista de *Alunos* há a coluna **Financeiro** (Em dia, A vencer, Em atraso, Sem cobrança, olhando o mês atual) e o filtro **Só em atraso**.
+Essas colunas aparecem para gerente e funcionário; o professor não as vê.
+
+## Aviso de cobrança (WhatsApp / e-mail)
+
+Em *Pagamentos*, selecione uma cobrança em aberto e clique em **Avisar aluno**:
+- A janela mostra o aluno, a cobrança (mês, vencimento, valor, dias de atraso ou dias para vencer) e os contatos cadastrados.
+- A mensagem já vem pronta e muda conforme o caso: em atraso (com os dias), vence hoje, vence amanhã ou vence em N dias. Pode ser editada antes de enviar.
+- **Abrir WhatsApp** (wa.me, com o número já em formato 55+DDD) e **Enviar por e-mail** (programa de e-mail do computador) abrem com o texto preenchido; **Copiar mensagem** copia o texto.
+- Sem telefone válido o botão do WhatsApp fica desligado; sem e-mail, o de e-mail. Cobrança paga ou cancelada não gera aviso.
+- Quem envia é a recepção: o software não manda nada sozinho e não registra o aviso.
+
+![aviso](img/aviso-cobranca.png)
+
 ## Ficha de treino (professor)
 
 `FichasPanel` lista as fichas (busca, filtro por situação, "só as minhas"). Abrir ou criar leva ao `FichaEditor` em tela cheia:
@@ -62,3 +91,9 @@ Definições dos números (também no Javadoc de `service/Indicadores`):
 | Ficha de treino | Biblioteca de exercícios |
 |---|---|
 | ![ficha](img/ficha.png) | ![biblioteca](img/ficha-biblioteca.png) |
+
+| Painel da recepção | Pagamentos com histórico do aluno |
+|---|---|
+| ![recepção](img/funcionario.png) | ![pagamentos](img/pagamentos.png) |
+
+![alunos](img/alunos-real.png)

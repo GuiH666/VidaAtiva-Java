@@ -24,7 +24,7 @@ import java.util.List;
  * <p>
  * Os cartões mudam conforme o perfil do usuário logado:
  * <ul>
- *   <li>FUNCIONARIO: alunos ativos, cobranças pendentes e em atraso;</li>
+ *   <li>FUNCIONARIO: não é mais usado aqui, pois o menu abre o {@link FuncionarioPainel}; o ramo fica como reserva;</li>
  *   <li>PROFESSOR (e qualquer outro perfil): alunos ativos, fichas ativas e professores; o professor também vê a lista
  *       de fichas com revisão vencida ou marcada para os próximos 15 dias.</li>
  * </ul>

@@ -1,7 +1,10 @@
 package br.com.vidaativa.ui.panels;
 
+import br.com.vidaativa.dao.AlunoDAO;
 import br.com.vidaativa.dao.PagamentoDAO;
+import br.com.vidaativa.model.Aluno;
 import br.com.vidaativa.model.Pagamento;
+import br.com.vidaativa.service.MensagemCobranca;
 import br.com.vidaativa.ui.*;
 import br.com.vidaativa.ui.UI.Opcao;
 
@@ -11,6 +14,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -33,24 +37,36 @@ import java.util.List;
 public class PagamentosPanel extends PainelBase {
     private final PagamentoDAO dao = new PagamentoDAO();
     // Colunas da tabela (a ordem aqui precisa bater com o addRow em recarregar()).
-    private final JTable tabela = UI.tabela("Aluno", "Referência", "Vencimento", "Valor", "Forma", "Status", "Pago em");
+    private final JTable tabela = UI.tabela("Aluno", "Vencimento", "Valor", "Status");
     private final JComboBox<Opcao> filtroStatus = new JComboBox<>(new Opcao[]{
             new Opcao("", "Todos os status"), new Opcao("ATRASADO", "Atrasados"), new Opcao("PENDENTE", "Pendentes"),
             new Opcao("PAGO", "Pagos"), new Opcao("CANCELADO", "Cancelados")});
-    private final JTextField busca = new JTextField(18);
+    private final JTextField busca = new br.com.vidaativa.ui.componentes.CampoBusca("Buscar aluno", 14);
     private final JLabel totais = new JLabel(" ");
     /** Cobranças que estão na tabela agora; a linha selecionada na tabela é o mesmo índice desta lista. */
     private List<Pagamento> lista = new ArrayList<>();
+    /** Histórico do aluno da cobrança selecionada (lado direito da tela). */
+    private final HistoricoAlunoPanel historico;
 
     public PagamentosPanel() {
-        super("Pagamentos", "Gere as mensalidades do mês, registre os recebimentos e acompanhe quem está em atraso.");
+        this(new HistoricoAlunoPanel());
+    }
+
+    /** Construtor para as capturas de demonstração: recebe o painel de histórico já montado. */
+    PagamentosPanel(HistoricoAlunoPanel historico) {
+        super("Pagamentos", "Gere as mensalidades, registre recebimentos e veja o histórico de cada aluno ao selecionar uma cobrança.");
+        this.historico = historico;
 
         // --- Botões de ação ---
-        JButton gerar = Theme.primary("Gerar mensalidades do mês");
+        JButton gerar = Theme.primary("Gerar mensalidades");
         gerar.addActionListener(e -> gerarDoMes());
         JButton receber = Theme.button("Registrar pagamento");
         receber.addActionListener(e -> registrar());
-        JButton cancelar = Theme.button("Cancelar cobrança");
+        JButton avisar = Theme.button("Avisar aluno");
+        avisar.setToolTipText("Abre uma mensagem pronta de cobrança (WhatsApp ou e-mail) para a cobrança selecionada");
+        avisar.addActionListener(e -> avisar());
+        JButton cancelar = Theme.button("Cancelar");
+        cancelar.setToolTipText("Cancelar a cobrança selecionada (só se ainda não foi paga)");
         cancelar.addActionListener(e -> cancelar());
 
         // --- Filtros: qualquer mudança (status ou texto digitado) recarrega a lista ---
@@ -63,16 +79,22 @@ public class PagamentosPanel extends PainelBase {
         });
 
         // --- Montagem do layout: botões à esquerda, filtros à direita, tabela no centro, totais embaixo ---
-        JPanel acoes = UI.botoes(gerar, receber, cancelar);
-        JPanel filtros = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        // Duas linhas, porque a lista divide a tela com o histórico: botões (que quebram de linha se faltar espaço) e, abaixo, busca + situação.
+        JPanel acoes = new JPanel(new br.com.vidaativa.ui.componentes.FluxoLayout(FlowLayout.LEFT, 8, 8));
+        acoes.setOpaque(false);
+        acoes.add(gerar);
+        acoes.add(receber);
+        acoes.add(avisar);
+        acoes.add(cancelar);
+        filtroStatus.setPreferredSize(new Dimension(170, 40));
+        JPanel filtros = new JPanel(new BorderLayout(10, 0));
         filtros.setOpaque(false);
-        filtros.add(filtroStatus);
-        filtros.add(UI.rotulo("Aluno:"));
-        filtros.add(busca);
-        JPanel topo = new JPanel(new BorderLayout());
+        filtros.add(busca, BorderLayout.CENTER);
+        filtros.add(filtroStatus, BorderLayout.EAST);
+        JPanel topo = new JPanel(new br.com.vidaativa.ui.componentes.PilhaVertical(10));
         topo.setOpaque(false);
-        topo.add(acoes, BorderLayout.WEST);
-        topo.add(filtros, BorderLayout.EAST);
+        topo.add(acoes);
+        topo.add(filtros);
 
         totais.setForeground(Theme.MUTED);
         JPanel corpo = new JPanel(new BorderLayout(0, 10));
@@ -80,10 +102,21 @@ public class PagamentosPanel extends PainelBase {
         corpo.add(topo, BorderLayout.NORTH);
         corpo.add(UI.rolagem(tabela), BorderLayout.CENTER);
         corpo.add(totais, BorderLayout.SOUTH);
-        add(corpo, BorderLayout.CENTER);
+        JPanel principal = new JPanel(new BorderLayout(18, 0));
+        principal.setOpaque(false);
+        principal.add(corpo, BorderLayout.CENTER);
+        principal.add(historico, BorderLayout.EAST);
+        add(principal, BorderLayout.CENTER);
 
-        // Coluna 5 = Status: cor ajuda a achar rápido quem está em atraso.
-        UI.colorirColuna(tabela, 5, s -> switch (s) {
+        // Selecionar uma cobrança mostra o histórico daquele aluno (só dele) no painel da direita.
+        tabela.getSelectionModel().addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting() || atualizando) return;
+            int r = tabela.getSelectedRow();
+            if (r >= 0 && r < lista.size()) historico.mostrar(lista.get(r).alunoId(), lista.get(r).alunoNome());
+        });
+
+        // Coluna 3 = Status: cor ajuda a achar rápido quem está em atraso.
+        UI.colorirColuna(tabela, 3, s -> switch (s) {
             case "Pago" -> Theme.GREEN;
             case "Atrasado" -> Theme.DANGER;
             case "Pendente" -> Theme.WARN;
@@ -91,26 +124,45 @@ public class PagamentosPanel extends PainelBase {
         });
     }
 
+    /** Verdadeiro enquanto a tabela é refeita, para a seleção automática não recarregar o histórico duas vezes. */
+    private boolean atualizando;
+
     /** Busca as cobranças no banco com os filtros atuais, redesenha a tabela e atualiza o total em aberto. */
     @Override
     public void recarregar() {
         try {
             String status = ((Opcao) filtroStatus.getSelectedItem()).valor();
             // Filtro vazio vira null = "sem filtro" para o DAO.
-            lista = dao.listar(status.isEmpty() ? null : status, busca.getText());
+            lista = buscar(status.isEmpty() ? null : status, busca.getText());
+            atualizando = true;
             DefaultTableModel m = UI.modelo(tabela);
             m.setRowCount(0);
             BigDecimal aberto = BigDecimal.ZERO;
             int qtdAberto = 0;
             for (Pagamento p : lista) {
-                m.addRow(new Object[]{p.alunoNome(), formatarReferencia(p.referencia()), UI.data(p.vencimento()), UI.moeda(p.valor()),
-                        UI.rotuloForma(p.formaPagamento()), UI.rotuloStatusPagamento(p.status()), UI.data(p.data())});
+                m.addRow(new Object[]{p.alunoNome(), UI.data(p.vencimento()), UI.moeda(p.valor()), UI.rotuloStatusPagamento(p.status())});
                 if (p.status().equals("PENDENTE") || p.status().equals("ATRASADO")) { aberto = aberto.add(p.valor()); qtdAberto++; }
             }
             totais.setText(lista.size() + " cobrança(s) listada(s)  •  Em aberto nesta lista: " + UI.moeda(aberto) + " (" + qtdAberto + ")");
+            // Mantém o histórico do aluno que estava aberto (ex.: depois de registrar um pagamento, ele já aparece lá).
+            int aluno = historico.alunoAtual();
+            if (aluno >= 0) {
+                int idx = -1;
+                for (int i = 0; i < lista.size() && idx < 0; i++) if (lista.get(i).alunoId() == aluno) idx = i;
+                if (idx >= 0) tabela.setRowSelectionInterval(idx, idx);
+                // Se o aluno não está mais na lista filtrada, o histórico dele continua aberto, só atualizado.
+                historico.mostrar(aluno, idx >= 0 ? lista.get(idx).alunoNome() : historico.nomeAtual());
+            }
+            atualizando = false;
         } catch (Exception e) {
+            atualizando = false;
             UI.erro(this, e);
         }
+    }
+
+    /** Lê as cobranças do banco (método à parte para as capturas de demonstração poderem trocar a fonte dos dados). */
+    List<Pagamento> buscar(String status, String termo) throws Exception {
+        return dao.listar(status, termo);
     }
 
     /** Converte a referência do banco (AAAA-MM) para o formato brasileiro MM/AAAA. */
@@ -157,6 +209,20 @@ public class PagamentosPanel extends PainelBase {
         boolean ok = DialogoForm.abrir(this, "Registrar pagamento", f, "Confirmar recebimento",
                 () -> dao.registrarPagamento(p.id(), ((Opcao) forma.getSelectedItem()).valor()), 520, 330);
         if (ok) recarregar();
+    }
+
+    /** Abre a janela com a mensagem de cobrança pronta para a cobrança selecionada (só em aberto: pendente ou atrasada). */
+    private void avisar() {
+        Pagamento p = selecionado();
+        if (p == null) return;
+        LocalDate hoje = LocalDate.now();
+        if (!MensagemCobranca.podeAvisar(p, hoje)) {
+            UI.info(this, "Só é possível avisar cobranças em aberto (pendentes ou atrasadas). Esta já está " + (p.status().equals("PAGO") ? "paga." : "cancelada."));
+            return;
+        }
+        Aluno aluno = null;
+        try { aluno = new AlunoDAO().buscarPorId(p.alunoId()); } catch (Exception e) { /* sem o cadastro, ainda dá para copiar a mensagem */ }
+        AvisoCobrancaDialog.abrir(this, p, aluno, hoje);
     }
 
     /** Cancela a cobrança selecionada (o DAO só permite cancelar cobranças ainda não pagas). */

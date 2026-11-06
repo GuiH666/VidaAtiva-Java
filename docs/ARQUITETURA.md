@@ -78,6 +78,16 @@ O menu lateral é montado em `ui/DashboardFrame.montarMenu` conforme o perfil de
 mês escolhido; trocar de mês recalcula em memória, sem novo acesso ao banco. As definições de cada número (cadastro,
 recebido, a receber, em atraso, adimplência) estão no Javadoc de `service/Indicadores`.
 
+## Painel da recepção e histórico do aluno
+
+- O funcionário abre no `FuncionarioPainel` (o que cobrar hoje, vencimentos, alunos sem mensalidade, aniversariantes). Os números vêm
+  do mesmo `Indicadores` do dashboard do gerente.
+- Em *Pagamentos* (gerente e funcionário), selecionar uma cobrança mostra à direita o `HistoricoAlunoPanel`: só as cobranças daquele aluno
+  (`PagamentoDAO.historicoDoAluno`), com resumo e filtros por situação e ano (`HistoricoPagamentos`).
+- Em *Pagamentos*, o botão "Avisar aluno" abre `AvisoCobrancaDialog` para a cobrança selecionada (só pendente/atrasada). O texto vem de
+  `MensagemCobranca`; os botões abrem `wa.me` ou `mailto:` pelo `Desktop.browse`. Nada é enviado pelo software nem gravado no banco.
+- Em *Alunos* (gerente e funcionário), a coluna Financeiro e o filtro "Só em atraso" usam `HistoricoPagamentos.situacaoFinanceira`.
+
 ## Segurança em resumo
 
 - Senha: PBKDF2-HMAC-SHA256 com salt (`security/PasswordUtil`). Hash antigo (SHA-256) é aceito e regravado no primeiro login.

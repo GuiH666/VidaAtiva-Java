@@ -65,3 +65,15 @@ cadastro de aluno/funcionário/professor, geração de mensalidades, registrar p
 - [ ] Dashboard: "cadastro" usa a data de início do aluno. Se o cadastro puder ser retroativo, vale criar uma coluna `criado_em`.
 - [ ] O dashboard carrega tudo em memória (alunos + cobranças). Para milhares de alunos, trocar por consultas agregadas em SQL.
 - [ ] As fontes seguem a lista Segoe UI, Inter, SF Pro Text, Helvetica Neue, Roboto, Noto Sans; sem nenhuma, usa a padrão do Java.
+
+## Ideias para o controle da recepção (ainda não feitas)
+
+- [ ] **Presença (check-in)**: registrar entrada do aluno (CPF/catraca) e listar quem sumiu há 15 dias ou mais, para a recepção chamar de volta.
+- [x] **Aviso de cobrança** (feito na v3.2): botão "Avisar aluno" em Pagamentos, com mensagem pronta para WhatsApp/e-mail.
+      Ainda não feito: registrar quem foi avisado e quando (hoje o software só abre o WhatsApp/e-mail; não guarda histórico do aviso)
+      e avisar vários alunos de uma vez.
+- [ ] **Recibo**: comprovante imprimível (PDF) ao registrar pagamento e estorno com motivo.
+- [ ] **Fechamento de caixa**: conferência diária do recebido por forma de pagamento e por funcionário, com registro de quem registrou ou cancelou cada cobrança.
+- [ ] **Trancamento e troca de plano**: congelar o plano por um período e trocar de plano com ajuste proporcional.
+- [ ] **Alunos sem ficha ativa**: lista de alunos Plus/Premium sem ficha de treino ativa e fichas com revisão próxima (os dados já existem).
+- [ ] **Negociação de atrasos**: registrar acordo (parcelamento ou desconto) em vez de só pagar ou cancelar.

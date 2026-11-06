@@ -90,6 +90,24 @@ public class PagamentoDAO {
     }
 
     /**
+     * Histórico completo de um aluno: todas as cobranças, inclusive pagas, em aberto e canceladas, da referência mais
+     * recente para a mais antiga. Usado pelo painel "Histórico do aluno" da tela Pagamentos.
+     * Também marca como ATRASADO as pendentes vencidas antes de consultar.
+     */
+    public List<Pagamento> historicoDoAluno(int alunoId) throws SQLException {
+        List<Pagamento> lista = new ArrayList<>();
+        try (Connection c = Database.getConnection()) {
+            marcarAtrasados(c);
+            try (PreparedStatement ps = c.prepareStatement(
+                    SELECT + "WHERE p.aluno_id = ? ORDER BY p.referencia DESC, p.id DESC")) {
+                ps.setInt(1, alunoId);
+                try (ResultSet rs = ps.executeQuery()) { while (rs.next()) lista.add(mapear(rs)); }
+            }
+        }
+        return lista;
+    }
+
+    /**
      * Gera a mensalidade do mês para um aluno. No momento a tela só usa {@link #gerarMensalidadesDoMes};
      * este método serve para gerar a de um aluno específico.
      *

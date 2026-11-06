@@ -193,11 +193,13 @@ public final class UI {
         FontMetrics fm = t.getFontMetrics(t.getFont());
         FontMetrics fh = t.getFontMetrics(Theme.fonte(12f, Font.BOLD));
         int linhas = Math.min(t.getRowCount(), 60);
+        // Tabelas estreitas (ex.: histórico do aluno) pedem menos folga por coluna.
+        int folga = t.getClientProperty("folgaColunas") instanceof Integer f ? f : 44;
         for (int c = 0; c < t.getColumnCount(); c++) {
-            int w = fh.stringWidth(String.valueOf(t.getColumnName(c))) + 40;
+            int w = fh.stringWidth(String.valueOf(t.getColumnName(c))) + folga - 4;
             for (int r = 0; r < linhas; r++) {
                 Object v = t.getValueAt(r, c);
-                if (v != null) w = Math.max(w, fm.stringWidth(v.toString()) + 44);
+                if (v != null) w = Math.max(w, fm.stringWidth(v.toString()) + folga);
             }
             javax.swing.table.TableColumn col = t.getColumnModel().getColumn(c);
             col.setMinWidth(Math.min(w, 80));

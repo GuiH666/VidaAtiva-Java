@@ -25,6 +25,10 @@ import java.util.*;
  *   <li><b>A receber</b>: soma das cobranças PENDENTES do mês que ainda não venceram.</li>
  *   <li><b>Em atraso (total)</b>: soma de TODAS as cobranças atrasadas, de qualquer mês: é o que a recepção precisa cobrar.</li>
  *   <li><b>Adimplência do mês</b>: pagas / (pagas + pendentes + atrasadas) das cobranças do mês; canceladas ficam de fora.</li>
+ *   <li><b>Vencem hoje</b>: cobranças PENDENTES com vencimento igual a hoje (ainda não são atraso).</li>
+ *   <li><b>Sem mensalidade no mês</b>: alunos ativos que deveriam pagar (valor maior que zero; TotalPass Básico não paga) e não
+ *       têm nenhuma cobrança com a referência do mês (quem entrou depois do mês não conta). É o aviso para gerar as mensalidades.</li>
+ *   <li><b>Aniversariantes</b>: alunos ativos que fazem aniversário no mês escolhido, em ordem de dia.</li>
  * </ul>
  */
 public final class Indicadores {
@@ -48,7 +52,9 @@ public final class Indicadores {
             List<MesReceita> ultimosMeses,
             LinkedHashMap<String, Integer> alunosPorPlano, int totalPass, int convencional,
             LinkedHashMap<String, BigDecimal> recebidoPorForma,
-            List<Atraso> atrasos, List<Pagamento> vencemEmBreve, List<Aluno> cadastrosRecentes) {
+            List<Atraso> atrasos, List<Pagamento> vencemEmBreve, List<Aluno> cadastrosRecentes,
+            int vencemHojeQtd, BigDecimal vencemHojeValor, int recebidoHojeQtd,
+            List<Aluno> semCobrancaNoMes, List<Aluno> aniversariantes) {
 
         /** Variação percentual de {@code atual} sobre {@code anterior}; {@code NaN} quando não há base (anterior zero). */
         public static double variacao(double atual, double anterior) {
@@ -104,11 +110,17 @@ public final class Indicadores {
         List<Atraso> atrasos = new ArrayList<>();
         List<Pagamento> proximas = new ArrayList<>();
         Set<Integer> alunosAtrasados = new HashSet<>();
+        Set<Integer> comCobrancaNoMes = new HashSet<>();
+        int vencemHojeQtd = 0, recebidoHojeQtd = 0;
+        BigDecimal vencemHojeValor = BigDecimal.ZERO;
 
         for (Pagamento p : pagamentos) {
             String sit = situacao(p, hoje);
             BigDecimal valor = p.valor() == null ? BigDecimal.ZERO : p.valor();
             boolean doMes = ref.equals(p.referencia());
+            if (doMes) comCobrancaNoMes.add(p.alunoId());
+            if ("PENDENTE".equals(sit) && hoje.equals(p.vencimento())) { vencemHojeQtd++; vencemHojeValor = vencemHojeValor.add(valor); }
+            if ("PAGO".equals(sit) && hoje.equals(p.data())) recebidoHojeQtd++;
 
             if ("PAGO".equals(sit) && p.data() != null) {
                 YearMonth pm = YearMonth.from(p.data());
@@ -155,8 +167,20 @@ public final class Indicadores {
                 .sorted(Comparator.comparing(Aluno::dataInicio).reversed().thenComparing(Aluno::nome))
                 .limit(6).toList();
 
+        List<Aluno> semCobranca = alunos.stream()
+                .filter(Aluno::ativo)
+                .filter(a -> a.dataInicio() == null || !a.dataInicio().isAfter(mes.atEndOfMonth()))   // quem entrou depois do mês não devia nada nele
+                .filter(a -> !comCobrancaNoMes.contains(a.id()))
+                .filter(a -> Precificacao.valorMensalidade(a.plano(), a.valorPlano(), a.tipoCliente()).signum() > 0)
+                .sorted(Comparator.comparing(Aluno::nome)).toList();
+        List<Aluno> aniversariantes = alunos.stream()
+                .filter(Aluno::ativo)
+                .filter(a -> a.dataNascimento() != null && a.dataNascimento().getMonthValue() == mes.getMonthValue())
+                .sorted(Comparator.comparingInt((Aluno a) -> a.dataNascimento().getDayOfMonth()).thenComparing(Aluno::nome)).toList();
+
         return new Resultado(mes, hoje, ativos, inativos, cadHoje, cadMes, cadAnt, porDia,
                 pagas, pend, atras, canc, recMes, recAnt, recHoje, aReceber, atrasMes, atrasTotal, alunosAtrasados.size(),
-                adimplencia, ultimos, alunosPorPlano, totalPass, convencional, porForma, atrasos, proximas, recentes);
+                adimplencia, ultimos, alunosPorPlano, totalPass, convencional, porForma, atrasos, proximas, recentes,
+                vencemHojeQtd, vencemHojeValor, recebidoHojeQtd, semCobranca, aniversariantes);
     }
 }

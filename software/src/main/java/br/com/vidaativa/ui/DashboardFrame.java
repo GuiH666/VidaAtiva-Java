@@ -75,7 +75,7 @@ public class DashboardFrame extends JFrame {
      */
     private void montarMenu() {
         switch (usuario.perfil().toUpperCase()) {
-            // O gerente vê o dashboard completo; os demais perfis veem o resumo simples.
+            // O gerente vê o dashboard completo, o funcionário o painel da recepção e o professor o resumo simples.
             case "GERENTE" -> {
                 item("Painel", Icones.Tipo.PAINEL, () -> new GerentePainel(usuario));
                 item("Equipe", Icones.Tipo.EQUIPE, () -> new EquipePanel(usuario));
@@ -84,7 +84,7 @@ public class DashboardFrame extends JFrame {
             }
             // Funcionário (recepção): cuida de alunos e cobranças, mas não vê a Equipe.
             case "FUNCIONARIO" -> {
-                item("Painel", Icones.Tipo.PAINEL, () -> new ResumoPanel(usuario));
+                item("Painel", Icones.Tipo.PAINEL, () -> new FuncionarioPainel(usuario));
                 item("Alunos", Icones.Tipo.ALUNOS, () -> new AlunosPanel(true));
                 item("Pagamentos", Icones.Tipo.PAGAMENTOS, PagamentosPanel::new);
             }

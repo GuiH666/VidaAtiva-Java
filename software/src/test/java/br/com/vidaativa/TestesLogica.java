@@ -4,7 +4,9 @@ import br.com.vidaativa.dao.AlunoDAO;
 import br.com.vidaativa.model.Aluno;
 import br.com.vidaativa.model.Pagamento;
 import br.com.vidaativa.service.BibliotecaExercicios;
+import br.com.vidaativa.service.HistoricoPagamentos;
 import br.com.vidaativa.service.Indicadores;
+import br.com.vidaativa.service.MensagemCobranca;
 import br.com.vidaativa.model.AvaliacaoFisica;
 import br.com.vidaativa.security.PasswordUtil;
 import br.com.vidaativa.security.TokenService;
@@ -39,6 +41,8 @@ import java.util.List;
  *   <li>{@link #vencimentos()}: cálculo do próximo vencimento em {@code AlunoDAO.proximoVencimento} (método estático, não abre conexão);</li>
  *   <li>{@link #imc()}: cálculo do IMC em {@code AvaliacaoFisica};</li>
  *   <li>{@link #painelGerente()}: números do painel do gerente em {@code Indicadores.calcular};</li>
+ *   <li>{@link #historicoPagamentos()}: resumo e filtros do histórico de pagamentos de um aluno;</li>
+ *   <li>{@link #avisoCobranca()}: texto e links (WhatsApp/e-mail) do aviso de cobrança;</li>
  *   <li>{@link #biblioteca()}: busca e filtro da biblioteca de exercícios da ficha de treino.</li>
  * </ul>
  * O que NÃO cobre: DAOs (precisam do MySQL), telas Swing e as rotas HTTP (essas estão em {@code TestesApi}).
@@ -58,6 +62,8 @@ public class TestesLogica {
         vencimentos();
         imc();
         painelGerente();
+        historicoPagamentos();
+        avisoCobranca();
         biblioteca();
         System.out.println("\n" + ok + " verificações ok, " + falhas + " falha(s).");
         if (falhas > 0) System.exit(1);
@@ -166,8 +172,11 @@ public class TestesLogica {
     }
 
     // ---------- Indicadores (painel do gerente) ----------
+    private static final java.util.Map<String, LocalDate> NASCIMENTOS = java.util.Map.of(
+            "Ana", LocalDate.of(2000, 11, 20), "Bruno", LocalDate.of(1990, 11, 3), "Carla", LocalDate.of(1995, 11, 15), "Davi", LocalDate.of(1985, 10, 1));
+
     private static Aluno aluno(int id, String nome, String plano, String tipo, LocalDate inicio, boolean ativo) {
-        return new Aluno(id, id, nome, nome + "@x.com", nome.toLowerCase(), "52998224725", "(11) 99999-0000", null, inicio,
+        return new Aluno(id, id, nome, nome + "@x.com", nome.toLowerCase(), "52998224725", "(11) 99999-0000", NASCIMENTOS.get(nome), inicio,
                 1, plano, new BigDecimal("100.00"), tipo, "PIX", null, null, ativo);
     }
 
@@ -222,6 +231,21 @@ public class TestesLogica {
                         && r.ultimosMeses().get(5).emAberto().compareTo(new BigDecimal("130.00")) == 0);
         check("cadastros recentes: os mais novos primeiro", r.cadastrosRecentes().get(0).dataInicio().equals(LocalDate.of(2026, 11, 5)));
 
+        check("recebido hoje: 0 pagamentos; nenhuma cobrança vence hoje", r.recebidoHojeQtd() == 0 && r.vencemHojeQtd() == 0);
+        check("aniversariantes de novembro: só alunos ativos, por dia (Bruno 3, Ana 20)", r.aniversariantes().size() == 2
+                && r.aniversariantes().get(0).nome().equals("Bruno") && r.aniversariantes().get(1).nome().equals("Ana"));
+        check("sem mensalidade em novembro: ninguém (TotalPass Básico não paga e os demais têm cobrança)", r.semCobrancaNoMes().isEmpty());
+        Indicadores.Resultado outubro = Indicadores.calcular(YearMonth.of(2026, 10), hoje, alunos, pagamentos);
+        check("sem mensalidade em outubro: só o Davi (a Elisa entrou em novembro e não devia nada em outubro)", outubro.semCobrancaNoMes().size() == 1
+                && outubro.semCobrancaNoMes().get(0).nome().equals("Davi"));
+        List<Pagamento> hojePag = List.of(
+                cobranca(21, 1, "Ana", "2026-11", null, "100.00", null, "PENDENTE", hoje),
+                cobranca(22, 2, "Bruno", "2026-11", null, "50.00", null, "PENDENTE", hoje),
+                cobranca(23, 4, "Davi", "2026-11", hoje, "80.00", "PIX", "PAGO", hoje));
+        Indicadores.Resultado rh = Indicadores.calcular(YearMonth.of(2026, 11), hoje, alunos, hojePag);
+        check("vencem hoje: 2 cobranças, R$ 150; recebido hoje: 1 pagamento", rh.vencemHojeQtd() == 2 && rh.vencemHojeValor().compareTo(new BigDecimal("150.00")) == 0
+                && rh.recebidoHojeQtd() == 1 && rh.recebidoHoje().compareTo(new BigDecimal("80.00")) == 0);
+
         Indicadores.Resultado out = Indicadores.calcular(YearMonth.of(2026, 10), hoje, alunos, pagamentos);
         check("mês de outubro: recebido 50, atrasada a de Carla (120), cadastros 2", out.recebidoMes().compareTo(new BigDecimal("50.00")) == 0
                 && out.atrasadoMes().compareTo(new BigDecimal("120.00")) == 0 && out.cadastrosMes() == 2 && out.cadastrosHoje() == 2);
@@ -232,6 +256,91 @@ public class TestesLogica {
         check("variação: 200 sobre 50 = +300%; sem base = NaN", Indicadores.Resultado.variacao(200, 50) == 300.0 && Double.isNaN(Indicadores.Resultado.variacao(5, 0)));
         check("situação: pendente vencida vira ATRASADO; pendente em dia continua", Indicadores.situacao(pagamentos.get(2), hoje).equals("ATRASADO")
                 && Indicadores.situacao(pagamentos.get(1), hoje).equals("PENDENTE"));
+    }
+
+    // ---------- Aviso de cobrança (WhatsApp / e-mail) ----------
+    static void avisoCobranca() {
+        System.out.println("\n[Aviso de cobrança]");
+        LocalDate hoje = LocalDate.of(2026, 11, 5);
+        Pagamento atrasada = cobranca(1, 1, "Ana Paula Souza", "2026-10", null, "129.90", "PIX", "PENDENTE", LocalDate.of(2026, 10, 25));
+        Pagamento venceHoje = cobranca(2, 1, "Ana Paula Souza", "2026-11", null, "129.90", "PIX", "PENDENTE", hoje);
+        Pagamento venceAmanha = cobranca(3, 1, "Ana Paula Souza", "2026-11", null, "129.90", "PIX", "PENDENTE", hoje.plusDays(1));
+        Pagamento venceEm3 = cobranca(4, 1, "Ana Paula Souza", "2026-11", null, "129.90", "PIX", "PENDENTE", hoje.plusDays(3));
+        Pagamento paga = cobranca(5, 1, "Ana Paula Souza", "2026-10", LocalDate.of(2026, 10, 20), "129.90", "PIX", "PAGO", LocalDate.of(2026, 10, 25));
+        Pagamento cancelada = cobranca(6, 1, "Ana Paula Souza", "2026-10", null, "129.90", "PIX", "CANCELADO", LocalDate.of(2026, 10, 25));
+
+        check("pode avisar atrasada, a vencer e vencendo hoje",
+                MensagemCobranca.podeAvisar(atrasada, hoje) && MensagemCobranca.podeAvisar(venceHoje, hoje) && MensagemCobranca.podeAvisar(venceEm3, hoje));
+        check("não avisa paga nem cancelada", !MensagemCobranca.podeAvisar(paga, hoje) && !MensagemCobranca.podeAvisar(cancelada, hoje));
+        boolean recusou = false;
+        try { MensagemCobranca.texto("Ana", paga, hoje); } catch (IllegalArgumentException e) { recusou = true; }
+        check("texto de cobrança paga é recusado", recusou);
+
+        String t = MensagemCobranca.texto("Ana Paula Souza", atrasada, hoje);
+        check("saúda pelo primeiro nome", t.startsWith("Olá, Ana! "));
+        check("atrasada: mês, vencimento, valor e dias", t.contains("outubro de 2026") && t.contains("25/10/2026") && t.contains("R$ 129,90") && t.contains("há 11 dias"));
+        check("vence hoje", MensagemCobranca.texto("Ana", venceHoje, hoje).contains("vence hoje (05/11/2026)"));
+        check("vence amanhã", MensagemCobranca.texto("Ana", venceAmanha, hoje).contains("vence amanhã (06/11/2026)"));
+        check("vence em 3 dias", MensagemCobranca.texto("Ana", venceEm3, hoje).contains("vence em 3 dias (08/11/2026)"));
+        check("1 dia de atraso no singular", MensagemCobranca.texto("Ana",
+                cobranca(7, 1, "Ana", "2026-11", null, "100.00", "PIX", "PENDENTE", hoje.minusDays(1)), hoje).contains("há 1 dia."));
+        check("assunto muda com a situação", MensagemCobranca.assunto(atrasada, hoje).startsWith("Mensalidade em aberto")
+                && MensagemCobranca.assunto(venceEm3, hoje).startsWith("Lembrete de vencimento"));
+
+        check("telefone com DDD ganha o 55", "5511999991234".equals(MensagemCobranca.numeroWhatsApp("(11) 99999-1234")));
+        check("telefone fixo (10 dígitos) também", "551133334444".equals(MensagemCobranca.numeroWhatsApp("11 3333-4444")));
+        check("telefone já com 55 não duplica", "5511999991234".equals(MensagemCobranca.numeroWhatsApp("+55 11 99999-1234")));
+        check("telefone curto/vazio/nulo não gera número", MensagemCobranca.numeroWhatsApp("99999-1234") == null
+                && MensagemCobranca.numeroWhatsApp("") == null && MensagemCobranca.numeroWhatsApp(null) == null);
+        String link = MensagemCobranca.linkWhatsApp("(11) 99999-1234", "Olá, Ana!\nR$ 10 & mais");
+        check("link do WhatsApp codificado, sem '+'", link.startsWith("https://wa.me/5511999991234?text=") && !link.contains("+") && !link.contains(" ")
+                && link.contains("%0A") && link.contains("%26") && link.contains("Ol%C3%A1"));
+        check("sem telefone válido, sem link", MensagemCobranca.linkWhatsApp("123", "x") == null);
+        String mail = MensagemCobranca.linkEmail("ana@x.com", "Lembrete - Vida Ativa", "Olá!\nTudo bem?");
+        check("link de e-mail com assunto e corpo", mail.startsWith("mailto:ana@x.com?subject=Lembrete%20-%20Vida%20Ativa&body=Ol%C3%A1%21%0ATudo%20bem%3F"));
+        check("e-mail vazio/sem @ não gera link", MensagemCobranca.linkEmail("", "a", "b") == null && MensagemCobranca.linkEmail("ana", "a", "b") == null && MensagemCobranca.linkEmail(null, "a", "b") == null);
+    }
+
+    // ---------- Histórico de pagamentos de um aluno ----------
+    static void historicoPagamentos() {
+        System.out.println("\n[Histórico de pagamentos do aluno]");
+        LocalDate hoje = LocalDate.of(2026, 11, 5);
+        List<Pagamento> h = List.of(
+                cobranca(1, 1, "Ana", "2026-08", LocalDate.of(2026, 8, 10), "100.00", "PIX", "PAGO", LocalDate.of(2026, 8, 10)),        // pontual
+                cobranca(2, 1, "Ana", "2026-09", LocalDate.of(2026, 9, 15), "100.00", "CARTAO", "PAGO", LocalDate.of(2026, 9, 10)),     // 5 dias de atraso
+                cobranca(3, 1, "Ana", "2026-10", null, "100.00", null, "ATRASADO", LocalDate.of(2026, 10, 10)),
+                cobranca(4, 1, "Ana", "2026-11", null, "100.00", null, "PENDENTE", LocalDate.of(2026, 11, 10)),                        // ainda a vencer
+                cobranca(5, 1, "Ana", "2026-07", null, "100.00", null, "CANCELADO", LocalDate.of(2026, 7, 10)),
+                cobranca(6, 1, "Ana", "2025-12", LocalDate.of(2025, 12, 9), "100.00", "PIX", "PAGO", LocalDate.of(2025, 12, 10)));     // pontual, ano anterior
+        HistoricoPagamentos.Resumo r = HistoricoPagamentos.resumir(h, hoje);
+        check("resumo: 6 cobranças = 3 pagas, 1 pendente, 1 atrasada, 1 cancelada", r.cobrancas() == 6 && r.pagas() == 3 && r.pendentes() == 1 && r.atrasadas() == 1 && r.canceladas() == 1);
+        check("total pago = 300; em aberto = 200 (pendente + atrasada); em atraso = 100",
+                r.totalPago().compareTo(new BigDecimal("300.00")) == 0 && r.emAberto().compareTo(new BigDecimal("200.00")) == 0 && r.emAtraso().compareTo(new BigDecimal("100.00")) == 0);
+        check("cancelada não entra nos valores", r.totalPago().add(r.emAberto()).compareTo(new BigDecimal("500.00")) == 0);
+        check("último pagamento = 15/09/2026, de R$ 100", r.ultimoPagamento().equals(LocalDate.of(2026, 9, 15)) && r.valorUltimoPagamento().compareTo(new BigDecimal("100.00")) == 0);
+        check("pontualidade: 2 de 3 pagas no prazo = 66,7%", r.pontuais() == 2 && Math.abs(r.percentualPontual() - 66.667) < 0.01);
+        check("primeira cobrança = vencimento mais antigo (10/12/2025)", r.primeiraCobranca().equals(LocalDate.of(2025, 12, 10)));
+
+        check("filtro sem critério devolve tudo, na mesma ordem", HistoricoPagamentos.filtrar(h, null, null, hoje).equals(h));
+        check("filtro por situação PAGO = 3", HistoricoPagamentos.filtrar(h, "PAGO", null, hoje).size() == 3);
+        check("filtro por ano 2026 = 5 e por ano 2025 = 1", HistoricoPagamentos.filtrar(h, null, 2026, hoje).size() == 5 && HistoricoPagamentos.filtrar(h, null, 2025, hoje).size() == 1);
+        check("filtro situação + ano: pagas de 2026 = 2", HistoricoPagamentos.filtrar(h, "PAGO", 2026, hoje).size() == 2);
+        Pagamento vencida = cobranca(7, 1, "Ana", "2026-10", null, "100.00", null, "PENDENTE", LocalDate.of(2026, 10, 20));
+        check("pendente já vencida aparece no filtro ATRASADO e não no PENDENTE",
+                HistoricoPagamentos.filtrar(List.of(vencida), "ATRASADO", null, hoje).size() == 1 && HistoricoPagamentos.filtrar(List.of(vencida), "PENDENTE", null, hoje).isEmpty());
+        check("anos disponíveis: do mais novo para o mais antigo", HistoricoPagamentos.anos(h).equals(List.of(2026, 2025)));
+
+        YearMonth nov = YearMonth.of(2026, 11);
+        check("situação financeira: qualquer cobrança atrasada = ATRASADO", HistoricoPagamentos.situacaoFinanceira(h, nov, hoje).equals("ATRASADO"));
+        check("situação financeira: só a do mês, paga = EM_DIA", HistoricoPagamentos.situacaoFinanceira(List.of(h.get(0),
+                cobranca(8, 1, "Ana", "2026-11", LocalDate.of(2026, 11, 2), "100.00", "PIX", "PAGO", LocalDate.of(2026, 11, 10))), nov, hoje).equals("EM_DIA"));
+        check("situação financeira: do mês e ainda a vencer = A_VENCER", HistoricoPagamentos.situacaoFinanceira(List.of(h.get(3)), nov, hoje).equals("A_VENCER"));
+        check("situação financeira: sem cobrança no mês ou só cancelada = SEM_COBRANCA", HistoricoPagamentos.situacaoFinanceira(List.of(), nov, hoje).equals("SEM_COBRANCA")
+                && HistoricoPagamentos.situacaoFinanceira(List.of(cobranca(9, 1, "Ana", "2026-11", null, "100.00", null, "CANCELADO", LocalDate.of(2026, 11, 10))), nov, hoje).equals("SEM_COBRANCA"));
+
+        HistoricoPagamentos.Resumo vazio = HistoricoPagamentos.resumir(List.of(), hoje);
+        check("aluno sem cobranças: zeros, sem data e pontualidade indefinida", vazio.cobrancas() == 0 && vazio.totalPago().signum() == 0
+                && vazio.ultimoPagamento() == null && vazio.primeiraCobranca() == null && Double.isNaN(vazio.percentualPontual()));
     }
 
     // ---------- Biblioteca de exercícios ----------

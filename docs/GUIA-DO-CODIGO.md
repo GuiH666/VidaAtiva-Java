@@ -22,8 +22,12 @@ Leia antes `ARQUITETURA.md`. Caminhos do Java são relativos a `software/src/mai
 | Exercícios e modelos de ficha prontos | `service/BibliotecaExercicios.java` |
 | Avaliações físicas | `ui/panels/AvaliacoesPanel.java` |
 | Painel do gerente (dashboard) | `ui/panels/GerentePainel.java` |
+| Painel da recepção (funcionário) | `ui/panels/FuncionarioPainel.java` |
+| Histórico de pagamentos de um aluno | `ui/panels/HistoricoAlunoPanel.java` (tela) + `service/HistoricoPagamentos.java` (resumo e filtros, testado) + `PagamentoDAO.historicoDoAluno` |
+| Aviso de cobrança (WhatsApp/e-mail) | `ui/panels/AvisoCobrancaDialog.java` (janela) + `service/MensagemCobranca.java` (texto e links, testado) + botão "Avisar aluno" em `PagamentosPanel` |
+| Coluna "Financeiro" da lista de alunos | `AlunosPanel` + `HistoricoPagamentos.situacaoFinanceira` |
 | Números do dashboard (fórmulas) | `service/Indicadores.java` (testado) + `dao/DashboardDAO.java` (só leitura do banco) |
-| Cards do painel inicial de funcionário/professor | `ui/panels/ResumoPanel.java` + `dao/ResumoDAO.java` |
+| Cards do painel inicial do professor | `ui/panels/ResumoPanel.java` + `dao/ResumoDAO.java` |
 | Preço da mensalidade por plano/TotalPass | `service/Precificacao.java` |
 | Validação de documento (CPF/RG), e-mail, telefone, usuário e senha | `service/Validacao.java` |
 | Qualquer SQL | `dao/*.java` |

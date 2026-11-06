@@ -411,7 +411,7 @@ public class GerentePainel extends PainelBase {
 
     // ------------------------------------------------------------------ textos
 
-    private static String primeiroNome(String nome) {
+    static String primeiroNome(String nome) {
         String n = nome == null ? "" : nome.trim();
         int e = n.indexOf(' ');
         return e > 0 ? n.substring(0, e) : n;
@@ -428,7 +428,7 @@ public class GerentePainel extends PainelBase {
         return m.getMonth().getDisplayName(TextStyle.SHORT, PT_BR).replace(".", "");
     }
 
-    private static String dataExtenso(LocalDate d) {
+    static String dataExtenso(LocalDate d) {
         return d.getDayOfWeek().getDisplayName(TextStyle.FULL, PT_BR) + ", " + d.getDayOfMonth() + " de "
                 + d.getMonth().getDisplayName(TextStyle.FULL, PT_BR) + " de " + d.getYear();
     }
