@@ -1,7 +1,11 @@
 package br.com.vidaativa.ui;
 
+import br.com.vidaativa.ui.componentes.Chip;
+import br.com.vidaativa.ui.componentes.RolagemArredondada;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.math.BigDecimal;
@@ -49,6 +53,15 @@ public final class UI {
      * O código troca o espaço "não separável" que o Java coloca depois do R$ por um espaço comum.
      */
     public static String moeda(BigDecimal v) { return v == null ? "—" : MOEDA.format(v).replace(' ', ' '); }
+
+    /** Moeda abreviada para eixos de gráfico: "R$ 850", "R$ 1,2 mil", "R$ 2,5 mi". */
+    public static String moedaCurta(double v) {
+        java.text.DecimalFormat um = new java.text.DecimalFormat("0.#", java.text.DecimalFormatSymbols.getInstance(Locale.of("pt", "BR")));
+        double a = Math.abs(v);
+        if (a >= 1_000_000) return "R$ " + um.format(v / 1_000_000) + " mi";
+        if (a >= 1_000) return "R$ " + um.format(v / 1_000) + " mil";
+        return "R$ " + Math.round(v);
+    }
 
     /** Devolve o texto, ou um traço (—) se for nulo ou só tiver espaços. Usado em células de tabela vazias. */
     public static String texto(String s) { return s == null || s.isBlank() ? "—" : s; }
@@ -109,6 +122,15 @@ public final class UI {
     public static JLabel rotulo(String texto) {
         JLabel l = new JLabel(texto);
         l.setForeground(Theme.MUTED);
+        l.setFont(Theme.fonte(12.5f, Font.PLAIN));
+        return l;
+    }
+
+    /** Título de cartão ou de seção: texto em negrito, tamanho 15. */
+    public static JLabel titulo(String texto) {
+        JLabel l = new JLabel(texto);
+        l.setFont(Theme.fonte(15f, Font.BOLD));
+        l.setForeground(Theme.TEXT);
         return l;
     }
 
@@ -129,27 +151,108 @@ public final class UI {
     }
 
     /**
-     * Aplica o visual padrão a uma tabela: linhas mais altas, grade escura, uma linha selecionável por vez
-     * e cabeçalho com colunas fixas (não dá para arrastar). Também é usada por tabelas editáveis, como a do {@code TreinoEditor}.
+     * Aplica o visual padrão a uma tabela: linhas altas e sem grade, listras suaves, destaque da linha sob o mouse,
+     * seleção verde e cabeçalho em letras pequenas e cinzas. Uma linha selecionável por vez; colunas fixas (não dá
+     * para arrastar).
      */
     public static void estilizarTabela(JTable t) {
-        t.setRowHeight(28);
-        t.setShowGrid(true);
-        t.setGridColor(new Color(52, 52, 52));
-        // Faz a tabela pintar o fundo até o fim da área visível, mesmo com poucas linhas.
+        t.setRowHeight(44);
+        t.setShowGrid(false);
+        t.setShowHorizontalLines(false);
+        t.setShowVerticalLines(false);
+        t.setIntercellSpacing(new Dimension(0, 0));
+        t.setOpaque(true);
+        t.setBackground(Theme.PANEL);
         t.setFillsViewportHeight(true);
         t.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        t.getTableHeader().setReorderingAllowed(false);
-        t.getTableHeader().setPreferredSize(new Dimension(10, 30));
-        t.setIntercellSpacing(new Dimension(1, 1));
+        t.setFocusable(true);
+        JTableHeader h = t.getTableHeader();
+        h.setReorderingAllowed(false);
+        h.setPreferredSize(new Dimension(10, 42));
+        h.setDefaultRenderer(new CabecalhoRenderer());
+        Celula celula = new Celula(t);
+        t.setDefaultRenderer(Object.class, celula);
+        t.setDefaultRenderer(Number.class, celula);
+        // As colunas se ajustam ao conteúdo sempre que as linhas mudam (nomes e e-mails não ficam cortados com "...").
+        t.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        javax.swing.event.TableModelListener ouvinte = e -> ajustarColunas(t);
+        t.getModel().addTableModelListener(ouvinte);
+        t.addPropertyChangeListener("model", e -> {
+            if (e.getOldValue() instanceof javax.swing.table.TableModel antigo) antigo.removeTableModelListener(ouvinte);
+            t.getModel().addTableModelListener(ouvinte);
+            ajustarColunas(t);
+        });
+        ajustarColunas(t);
     }
 
-    /** Envolve um componente (normalmente uma tabela) em um painel de rolagem com borda e fundo do tema. */
+    /**
+     * Define a largura preferida de cada coluna pelo maior texto (cabeçalho ou até 60 linhas) mais a folga das células.
+     * O que sobrar de largura é repartido entre as colunas pelo próprio JTable.
+     */
+    public static void ajustarColunas(JTable t) {
+        FontMetrics fm = t.getFontMetrics(t.getFont());
+        FontMetrics fh = t.getFontMetrics(Theme.fonte(12f, Font.BOLD));
+        int linhas = Math.min(t.getRowCount(), 60);
+        for (int c = 0; c < t.getColumnCount(); c++) {
+            int w = fh.stringWidth(String.valueOf(t.getColumnName(c))) + 40;
+            for (int r = 0; r < linhas; r++) {
+                Object v = t.getValueAt(r, c);
+                if (v != null) w = Math.max(w, fm.stringWidth(v.toString()) + 44);
+            }
+            javax.swing.table.TableColumn col = t.getColumnModel().getColumn(c);
+            col.setMinWidth(Math.min(w, 80));
+            col.setPreferredWidth(Math.min(w, 380));
+        }
+    }
+
+    /** Envolve um componente (normalmente uma tabela) em uma rolagem com cantos arredondados, borda e fundo do tema. */
     public static JScrollPane rolagem(JComponent c) {
-        JScrollPane sp = new JScrollPane(c);
-        sp.setBorder(BorderFactory.createLineBorder(Theme.BORDER));
-        sp.getViewport().setBackground(Theme.PANEL);
-        return sp;
+        return new RolagemArredondada(c);
+    }
+
+    /** Linha de tabela: texto com folga, listra alternada, destaque sob o mouse e seleção verde. */
+    private static final class Celula extends DefaultTableCellRenderer {
+        private int linhaSob = -1;
+
+        Celula(JTable t) {
+            // Guarda a linha sob o mouse para pintá-la mais clara.
+            t.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+                @Override public void mouseMoved(java.awt.event.MouseEvent e) {
+                    int r = t.rowAtPoint(e.getPoint());
+                    if (r != linhaSob) { linhaSob = r; t.repaint(); }
+                }
+            });
+            t.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override public void mouseExited(java.awt.event.MouseEvent e) { linhaSob = -1; t.repaint(); }
+            });
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable tb, Object v, boolean sel, boolean foco, int r, int c) {
+            super.getTableCellRendererComponent(tb, v, sel, false, r, c);
+            setBorder(BorderFactory.createEmptyBorder(0, c == 0 ? 18 : 14, 0, 14));
+            setHorizontalAlignment(SwingConstants.LEFT);
+            setForeground(Theme.TEXT);
+            setBackground(sel ? Theme.misturar(Theme.PANEL, Theme.GREEN, 0.20)
+                    : r == linhaSob ? Theme.HOVER
+                    : r % 2 == 1 ? Theme.misturar(Theme.PANEL, Color.WHITE, 0.025) : Theme.PANEL);
+            return this;
+        }
+    }
+
+    /** Cabeçalho da tabela: letras pequenas em maiúsculas, cinza, com uma linha embaixo. */
+    private static final class CabecalhoRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable tb, Object v, boolean sel, boolean foco, int r, int c) {
+            super.getTableCellRendererComponent(tb, v == null ? "" : v.toString().toUpperCase(Locale.ROOT), false, false, r, c);
+            setFont(Theme.fonte(11f, Font.BOLD));
+            setForeground(Theme.MUTED);
+            setBackground(Theme.PANEL);
+            setOpaque(true);
+            setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER),
+                    BorderFactory.createEmptyBorder(0, c == 0 ? 18 : 14, 0, 14)));
+            return this;
+        }
     }
 
     /** Atalho para acessar o modelo de dados de uma tabela criada por {@link #tabela}. O cast só vale para tabelas que usam DefaultTableModel. */
@@ -167,20 +270,38 @@ public final class UI {
     }
 
     /**
-     * Pinta o texto de uma coluna de status com cor (verde, vermelho, amarelo, cinza).
+     * Mostra uma coluna de status como "selo" colorido (texto em negrito sobre fundo translúcido da mesma cor).
      *
      * @param coluna        índice da coluna no modelo, começando em 0
      * @param corPorTexto   função que recebe o texto exibido na célula (ex.: "Pago") e devolve a cor
      */
     public static void colorirColuna(JTable t, int coluna, java.util.function.Function<String, Color> corPorTexto) {
         t.getColumnModel().getColumn(coluna).setCellRenderer(new DefaultTableCellRenderer() {
+            private String texto = "";
+            private Color cor = Theme.MUTED;
+            private Color fundo = Theme.PANEL;
+
             @Override
             public Component getTableCellRendererComponent(JTable tb, Object v, boolean sel, boolean foco, int r, int c) {
-                Component comp = super.getTableCellRendererComponent(tb, v, sel, foco, r, c);
-                // Linha selecionada fica com texto branco para continuar legível sobre o verde escuro da seleção.
-                comp.setForeground(sel ? Color.WHITE : corPorTexto.apply(String.valueOf(v)));
-                comp.setFont(comp.getFont().deriveFont(Font.BOLD));
-                return comp;
+                texto = String.valueOf(v);
+                cor = corPorTexto.apply(texto);
+                Component base = tb.getDefaultRenderer(Object.class).getTableCellRendererComponent(tb, "", sel, false, r, c);
+                fundo = base.getBackground();
+                setBorder(BorderFactory.createEmptyBorder(0, 14, 0, 14));
+                return this;
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = Theme.suave(g);
+                g2.setColor(fundo);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.setFont(Theme.fonte(12f, Font.BOLD));
+                // O selo fica encostado à esquerda da célula, com a altura do texto.
+                FontMetrics fm = g2.getFontMetrics();
+                int larg = fm.stringWidth(texto) + 22;
+                Chip.pintar(g2, texto, cor, 6, 0, Math.min(larg, getWidth() - 12), getHeight());
+                g2.dispose();
             }
         });
     }
@@ -240,6 +361,7 @@ public final class UI {
         a.setLineWrap(true);
         a.setWrapStyleWord(true);
         a.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        a.setFont(Theme.fonte(13.5f, Font.PLAIN));
         return a;
     }
 }

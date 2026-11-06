@@ -4,21 +4,18 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Painel de formulário: rótulo à esquerda, campo à direita, linha por linha (ou dois campos por linha).
+ * Painel de formulário: cada campo tem o rótulo pequeno em cima e o campo embaixo; dá para pôr um ou dois campos por linha.
  * <p>
- * Quem usa: o login e todos os diálogos de cadastro (aluno, funcionário, professor, ficha, avaliação, pagamento).
+ * Quem usa: o login e todos os diálogos de cadastro (aluno, funcionário, professor, avaliação, pagamento).
  * Normalmente o formulário é entregue ao {@link DialogoForm#abrir}, que o coloca dentro de uma janela com Cancelar/Salvar.
  * <p>
  * Como usar: crie o {@code Formulario} e chame, na ordem em que as linhas devem aparecer, {@link #adicionar},
  * {@link #adicionarPar}, {@link #adicionarGrande}, {@link #secao} e {@link #ajuda}. Cada chamada ocupa a próxima linha.
  * <p>
- * Internamente usa {@code GridBagLayout} com 4 colunas: rótulo 1, campo 1, rótulo 2, campo 2. As colunas de campo
- * (1 e 3) é que se esticam; as de rótulo ficam do tamanho do texto.
+ * Internamente usa {@code GridBagLayout} com 2 colunas iguais; o rótulo de cada campo fica numa linha acima dele.
  */
 public class Formulario extends JPanel {
-    // Próxima linha livre da grade (gridy). Cada método que adiciona algo incrementa este contador.
     private int linha = 0;
-    // Vira true quando há uma linha que cresce na vertical; o DialogoForm usa isso para decidir se centraliza ou não o formulário.
     private boolean temLinhaGrande = false;
 
     /** Cria o formulário vazio, com fundo transparente (aparece o fundo da janela). */
@@ -28,46 +25,47 @@ public class Formulario extends JPanel {
     }
 
     /**
-     * Uma linha: rótulo + campo ocupando o resto da largura.
+     * Uma linha: rótulo em cima e o campo ocupando a largura toda.
      *
-     * @param rotulo texto à esquerda (por convenção do projeto, campos obrigatórios terminam com " *")
+     * @param rotulo texto do rótulo (por convenção do projeto, campos obrigatórios terminam com " *")
      */
     public void adicionar(String rotulo, JComponent campo) {
-        GridBagConstraints g = base();
-        g.gridx = 0; g.gridy = linha; g.weightx = 0;
-        add(UI.rotulo(rotulo), g);
-        // gridwidth = 3: o campo atravessa as colunas 1 a 3, então fica alinhado com os campos das linhas em par.
-        g.gridx = 1; g.gridwidth = 3; g.weightx = 1;
-        add(campo, g);
-        linha++;
+        colocar(rotulo, campo, 0, 2, false);
+        linha += 2;
     }
 
-    /** Uma linha com dois pares rótulo + campo. */
+    /** Uma linha com dois campos lado a lado, cada um com seu rótulo em cima. */
     public void adicionarPar(String rotulo1, JComponent campo1, String rotulo2, JComponent campo2) {
-        GridBagConstraints g = base();
-        g.gridy = linha;
-        g.gridx = 0; g.weightx = 0; add(UI.rotulo(rotulo1), g);
-        g.gridx = 1; g.weightx = 1; add(campo1, g);
-        // O segundo rótulo ganha mais espaço à esquerda (18) para separar visualmente os dois pares.
-        g.gridx = 2; g.weightx = 0; g.insets = new Insets(5, 18, 5, 8); add(UI.rotulo(rotulo2), g);
-        g.gridx = 3; g.weightx = 1; g.insets = new Insets(5, 0, 5, 0); add(campo2, g);
-        linha++;
+        colocar(rotulo1, campo1, 0, 1, false);
+        colocar(rotulo2, campo2, 1, 1, false);
+        linha += 2;
     }
 
     /**
-     * Linha que cresce na vertical (para caixas de texto grandes ou abas). Em geral use uma só por formulário,
-     * porque as linhas grandes dividem entre si o espaço extra da altura. O rótulo fica alinhado ao topo.
+     * Linha que cresce na vertical (para caixas de texto grandes). Em geral use uma só por formulário,
+     * porque as linhas grandes dividem entre si o espaço extra da altura.
      */
     public void adicionarGrande(String rotulo, JComponent campo) {
         temLinhaGrande = true;
-        GridBagConstraints g = base();
-        g.gridx = 0; g.gridy = linha; g.weightx = 0; g.anchor = GridBagConstraints.NORTHWEST;
-        g.insets = new Insets(9, 0, 5, 8);
-        add(UI.rotulo(rotulo), g);
-        g.gridx = 1; g.gridwidth = 3; g.weightx = 1; g.weighty = 1; g.fill = GridBagConstraints.BOTH;
-        g.insets = new Insets(5, 0, 5, 0);
-        add(campo, g);
-        linha++;
+        colocar(rotulo, campo, 0, 2, true);
+        linha += 2;
+    }
+
+    /** Põe o rótulo (linha {@code linha}) e o campo (linha {@code linha + 1}) na coluna {@code col}. */
+    private void colocar(String rotulo, JComponent campo, int col, int largura, boolean cresce) {
+        GridBagConstraints g = new GridBagConstraints();
+        g.gridx = col; g.gridy = linha; g.gridwidth = largura; g.weightx = largura;
+        g.anchor = GridBagConstraints.WEST; g.fill = GridBagConstraints.HORIZONTAL;
+        // Quando há dois campos na linha, há folga entre eles.
+        int folgaDir = largura == 1 && col == 0 ? 14 : 0;
+        g.insets = new Insets(linha == 0 ? 0 : 10, 0, 5, folgaDir);
+        JLabel l = UI.rotulo("<html>" + rotulo.replace(" *", " <font color='#22C55E'>*</font>") + "</html>");
+        add(l, g);
+        GridBagConstraints c = (GridBagConstraints) g.clone();
+        c.gridy = linha + 1;
+        c.insets = new Insets(0, 0, 0, folgaDir);
+        if (cresce) { c.weighty = 1; c.fill = GridBagConstraints.BOTH; }
+        add(campo, c);
     }
 
     /** True se alguma linha cresce na vertical (então o formulário deve ocupar toda a altura disponível). */
@@ -81,42 +79,35 @@ public class Formulario extends JPanel {
         return p;
     }
 
-    /** Título de seção dentro do formulário: texto verde em negrito com uma linha embaixo. Ocupa as 4 colunas. */
+    /** Título de seção dentro do formulário: texto em negrito com uma linha embaixo. Ocupa as 2 colunas. */
     public void secao(String titulo) {
-        GridBagConstraints g = base();
-        g.gridx = 0; g.gridy = linha; g.gridwidth = 4; g.weightx = 1;
-        // Sem espaço extra em cima quando a seção é a primeira linha; nas demais, 14 px separam da seção anterior.
-        g.insets = new Insets(linha == 0 ? 0 : 14, 0, 4, 0);
-        JLabel l = new JLabel(titulo);
+        GridBagConstraints g = new GridBagConstraints();
+        g.gridx = 0; g.gridy = linha; g.gridwidth = 2; g.weightx = 1;
+        g.anchor = GridBagConstraints.WEST; g.fill = GridBagConstraints.HORIZONTAL;
+        g.insets = new Insets(linha == 0 ? 0 : 20, 0, 2, 0);
+        JLabel l = new JLabel(titulo.toUpperCase());
         l.setForeground(Theme.GREEN);
-        l.setFont(l.getFont().deriveFont(Font.BOLD));
+        l.setFont(Theme.fonte(11.5f, Font.BOLD));
         l.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER));
+        l.setPreferredSize(new Dimension(10, 26));
         add(l, g);
         linha++;
     }
 
     /**
-     * Texto de ajuda (cinza, pequeno) ocupando a largura toda, alinhado com os campos (abaixo de um campo).
+     * Texto de ajuda (cinza, pequeno) ocupando a largura toda, logo abaixo do campo anterior.
      * Aceita quebra de linha em HTML ({@code <br>}).
      */
     public void ajuda(String texto) {
-        GridBagConstraints g = base();
-        g.gridx = 1; g.gridy = linha; g.gridwidth = 3; g.weightx = 1;
-        // O HTML faz o JLabel quebrar o texto em várias linhas quando for longo.
+        GridBagConstraints g = new GridBagConstraints();
+        g.gridx = 0; g.gridy = linha; g.gridwidth = 2; g.weightx = 1;
+        g.anchor = GridBagConstraints.WEST; g.fill = GridBagConstraints.HORIZONTAL;
+        g.insets = new Insets(0, 0, 4, 0);
         JLabel l = new JLabel("<html>" + texto + "</html>");
         l.setForeground(Theme.MUTED);
-        l.setFont(l.getFont().deriveFont(11.5f));
+        l.setFont(Theme.fonte(11.5f, Font.PLAIN));
         add(l, g);
         linha++;
-    }
-
-    /** Cria as restrições padrão de uma célula: margem, alinhamento à esquerda e esticar na horizontal. Cada método ajusta o que precisa. */
-    private GridBagConstraints base() {
-        GridBagConstraints g = new GridBagConstraints();
-        g.insets = new Insets(5, 0, 5, 8);
-        g.anchor = GridBagConstraints.WEST;
-        g.fill = GridBagConstraints.HORIZONTAL;
-        return g;
     }
 
     /**

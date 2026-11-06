@@ -3,7 +3,7 @@
 
 db.url=jdbc:mysql://localhost:3306/vida_ativa?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true&connectTimeout=5000&characterEncoding=UTF-8
 db.user=root
-db.password= COLOCAR_A_SUA_SENHA_DO_BANCO
+db.password=COLOQUE_A_SENHA_DO_SEU_MYSQL
 
 # API usada pelo site dos alunos (sobe junto com o software)
 api.port=8080

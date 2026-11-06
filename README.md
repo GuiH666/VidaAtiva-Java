@@ -13,7 +13,7 @@ Sistema para academia em três partes que usam **um único banco MySQL**:
 Software (equipe) ──JDBC──▶ MySQL ◀──JDBC── API (porta 8080) ◀──fetch── Site (aluno)
 ```
 
-- **Gerente**: cadastra funcionários e professores. **Funcionário**: cadastra alunos e controla pagamentos.
+- **Gerente**: acompanha a academia num dashboard (cadastros e recebimentos do mês e do dia, atrasos) e cadastra funcionários e professores. **Funcionário**: cadastra alunos e controla pagamentos.
   **Professor**: monta fichas de treino e registra avaliações físicas.
 - **Aluno**: entra no site e vê plano, treino, avaliações e mensalidades.
 
@@ -25,6 +25,7 @@ VidaAtiva_Java/
 ├── docs/                   Documentação (comece por aqui se for novo no projeto)
 │   ├── ARQUITETURA.md        Como as partes se conectam, camadas, perfis, fluxos
 │   ├── GUIA-DO-CODIGO.md     "Onde mexo para...?" + receitas passo a passo
+│   ├── DESIGN.md             Identidade visual, componentes e dashboard do gerente
 │   ├── API.md                Rotas do site
 │   ├── CONTRIBUINDO.md       Ambiente, testes, Git, checklist de Pull Request
 │   ├── OPERACAO.md           Incidentes, metas de serviço, roteiros de atendimento, registro de mudanças
@@ -35,7 +36,7 @@ VidaAtiva_Java/
 │   ├── testar.bat / .sh      Compila e roda os testes automáticos
 │   ├── config.properties.example
 │   └── src/main/java/br/com/vidaativa/
-│       ├── config/ security/ model/ dao/ service/ api/ ui/ ui/panels/
+│       ├── config/ security/ model/ dao/ service/ api/ ui/ ui/panels/ ui/componentes/ ui/grafico/ ui/estilo/
 │       └── (cada pacote tem um package-info.java explicando o papel dele)
 └── site/                   Site do aluno (veja site/README.md)
     ├── index.html · pages/ · assets/{css,js,img}/
@@ -67,7 +68,7 @@ Requisitos: **JDK 21+** (`javac -version`) e **MySQL 8**.
 
 ## Testes
 
-`software/testar.bat` (ou `./testar.sh`): roda `TestesLogica` (regras, validação, senha, token) e `TestesApi`
+`software/testar.bat` (ou `./testar.sh`): roda `TestesLogica` (regras, validação, senha, token, números do dashboard, biblioteca de exercícios) e `TestesApi`
 (todas as rotas, com dados em memória, sem precisar de MySQL). Esperado: `0 falha(s)`.
 
 ## Regras de negócio (resumo)
@@ -80,3 +81,8 @@ Requisitos: **JDK 21+** (`javac -version`) e **MySQL 8**.
 
 Detalhes e fluxos em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
 
+## Para quem vai continuar o projeto
+
+1. Leia `docs/ARQUITETURA.md` e `docs/GUIA-DO-CODIGO.md`.
+2. Siga `docs/CONTRIBUINDO.md` (branches, testes, checklist).
+3. Veja `docs/PROXIMOS-PASSOS.md`: lista do que melhorar (visual dos cadastros, problemas já conhecidos, funcionalidades futuras).

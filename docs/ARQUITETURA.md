@@ -45,7 +45,7 @@ O menu lateral é montado em `ui/DashboardFrame.montarMenu` conforme o perfil de
 
 | Perfil | Painel | Equipe | Alunos | Pagamentos | Fichas | Avaliações |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|
-| Gerente | sim | sim | sim (edita) | sim | – | – |
+| Gerente | sim (dashboard) | sim | sim (edita) | sim | – | – |
 | Funcionário | sim | – | sim (edita) | sim | – | – |
 | Professor | sim | – | só consulta | – | sim | sim |
 | Aluno | só no site | | | | | |
@@ -61,7 +61,7 @@ O menu lateral é montado em `ui/DashboardFrame.montarMenu` conforme o perfil de
 3. `aluno.html` chama `/api/aluno/me`, `/me/fichas`, `/me/pagamentos`, `/me/avaliacoes` com o token.
 
 **Ficha de treino**
-1. Professor cria a ficha em *Fichas* (`FichaDialog` + `TreinoEditor`) e salva como **Ativa**.
+1. Professor cria a ficha em *Fichas* (`FichasPanel` abre o `FichaEditor` em tela cheia: dados, treinos e biblioteca de exercícios) e salva como **Ativa**.
 2. `FichaTreinoDAO.salvar` grava ficha + treinos + exercícios numa transação e deixa as outras fichas ativas do aluno como **Inativas**.
 3. O site mostra só a ficha ativa (`/api/aluno/me/fichas`).
 
@@ -71,6 +71,12 @@ O menu lateral é montado em `ui/DashboardFrame.montarMenu` conforme o perfil de
 2. Pendente com vencimento passado vira Atrasado sozinho (`PagamentoDAO.marcarAtrasados`, chamado ao listar).
 3. *Registrar pagamento* marca como Pago e avança o vencimento do aluno em um mês.
 4. O aluno só consulta no site (`pagamento.html`).
+
+## Dashboard do gerente
+
+`GerentePainel` pede os dados uma vez ao `DashboardDAO` (alunos, cobranças e resumo) e chama `Indicadores.calcular` para o
+mês escolhido; trocar de mês recalcula em memória, sem novo acesso ao banco. As definições de cada número (cadastro,
+recebido, a receber, em atraso, adimplência) estão no Javadoc de `service/Indicadores`.
 
 ## Segurança em resumo
 

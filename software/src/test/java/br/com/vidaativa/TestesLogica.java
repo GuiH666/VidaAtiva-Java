@@ -1,6 +1,10 @@
 package br.com.vidaativa;
 
 import br.com.vidaativa.dao.AlunoDAO;
+import br.com.vidaativa.model.Aluno;
+import br.com.vidaativa.model.Pagamento;
+import br.com.vidaativa.service.BibliotecaExercicios;
+import br.com.vidaativa.service.Indicadores;
 import br.com.vidaativa.model.AvaliacaoFisica;
 import br.com.vidaativa.security.PasswordUtil;
 import br.com.vidaativa.security.TokenService;
@@ -9,6 +13,8 @@ import br.com.vidaativa.service.Validacao;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
 
 /**
  * Testes da lógica "pura" do sistema, a que NÃO depende de banco de dados, de tela nem de rede. Não precisa de JUnit nem
@@ -31,7 +37,9 @@ import java.time.LocalDate;
  *   <li>{@link #precos()}: regras de {@code Precificacao} (convencional, TotalPass, o que cada plano inclui);</li>
  *   <li>{@link #validacoes()}: validações de formulário de {@code Validacao};</li>
  *   <li>{@link #vencimentos()}: cálculo do próximo vencimento em {@code AlunoDAO.proximoVencimento} (método estático, não abre conexão);</li>
- *   <li>{@link #imc()}: cálculo do IMC em {@code AvaliacaoFisica}.</li>
+ *   <li>{@link #imc()}: cálculo do IMC em {@code AvaliacaoFisica};</li>
+ *   <li>{@link #painelGerente()}: números do painel do gerente em {@code Indicadores.calcular};</li>
+ *   <li>{@link #biblioteca()}: busca e filtro da biblioteca de exercícios da ficha de treino.</li>
  * </ul>
  * O que NÃO cobre: DAOs (precisam do MySQL), telas Swing e as rotas HTTP (essas estão em {@code TestesApi}).
  *
@@ -49,6 +57,8 @@ public class TestesLogica {
         validacoes();
         vencimentos();
         imc();
+        painelGerente();
+        biblioteca();
         System.out.println("\n" + ok + " verificações ok, " + falhas + " falha(s).");
         if (falhas > 0) System.exit(1);
     }
@@ -153,6 +163,90 @@ public class TestesLogica {
         AvaliacaoFisica v = new AvaliacaoFisica(1, 1, 1, "A", "P", LocalDate.now(), new BigDecimal("78.50"), new BigDecimal("1.78"), null, null);
         check("IMC 78,5kg / 1,78m = 24,8", v.imc().compareTo(new BigDecimal("24.8")) == 0);
         check("IMC sem altura é null", new AvaliacaoFisica(1, 1, 1, "A", "P", LocalDate.now(), new BigDecimal("70"), null, null, null).imc() == null);
+    }
+
+    // ---------- Indicadores (painel do gerente) ----------
+    private static Aluno aluno(int id, String nome, String plano, String tipo, LocalDate inicio, boolean ativo) {
+        return new Aluno(id, id, nome, nome + "@x.com", nome.toLowerCase(), "52998224725", "(11) 99999-0000", null, inicio,
+                1, plano, new BigDecimal("100.00"), tipo, "PIX", null, null, ativo);
+    }
+
+    private static Pagamento cobranca(int id, int alunoId, String nome, String ref, LocalDate data, String valor, String forma, String status, LocalDate venc) {
+        return new Pagamento(id, alunoId, nome, ref, data, new BigDecimal(valor), forma, status, venc);
+    }
+
+    static void painelGerente() {
+        System.out.println("\n[Indicadores do painel do gerente]");
+        LocalDate hoje = LocalDate.of(2026, 11, 5);
+        List<Aluno> alunos = List.of(
+                aluno(1, "Ana", "Plus", "CONVENCIONAL", LocalDate.of(2026, 11, 5), true),
+                aluno(2, "Bruno", "Básico", "TOTALPASS", LocalDate.of(2026, 11, 1), true),
+                aluno(3, "Carla", "Premium", "CONVENCIONAL", LocalDate.of(2026, 10, 20), false),
+                aluno(4, "Davi", "Plus", "CONVENCIONAL", LocalDate.of(2026, 10, 31), true),
+                aluno(5, "Elisa", "Plus", "CONVENCIONAL", LocalDate.of(2026, 11, 5), true));
+        List<Pagamento> pagamentos = List.of(
+                cobranca(1, 1, "Ana", "2026-11", LocalDate.of(2026, 11, 3), "100.00", "PIX", "PAGO", LocalDate.of(2026, 11, 10)),
+                cobranca(2, 2, "Bruno", "2026-11", null, "50.00", null, "PENDENTE", LocalDate.of(2026, 11, 8)),
+                cobranca(3, 4, "Davi", "2026-11", null, "80.00", null, "PENDENTE", LocalDate.of(2026, 11, 2)),      // vencida: conta como atrasada
+                cobranca(4, 3, "Carla", "2026-10", null, "120.00", null, "ATRASADO", LocalDate.of(2026, 10, 10)),
+                cobranca(5, 1, "Ana", "2026-10", LocalDate.of(2026, 11, 4), "100.00", "CARTAO", "PAGO", LocalDate.of(2026, 10, 10)), // paga em novembro, referente a outubro
+                cobranca(6, 5, "Elisa", "2026-11", null, "90.00", null, "CANCELADO", LocalDate.of(2026, 11, 10)),
+                cobranca(7, 2, "Bruno", "2026-10", LocalDate.of(2026, 10, 12), "50.00", "PIX", "PAGO", LocalDate.of(2026, 10, 10)));
+
+        Indicadores.Resultado r = Indicadores.calcular(YearMonth.of(2026, 11), hoje, alunos, pagamentos);
+        check("alunos ativos = 4 e inativos = 1", r.alunosAtivos() == 4 && r.alunosInativos() == 1);
+        check("cadastros hoje = 2 (Ana e Elisa)", r.cadastrosHoje() == 2);
+        check("cadastros no mês = 3 e no mês anterior = 2 (inclui o aluno inativo)", r.cadastrosMes() == 3 && r.cadastrosMesAnterior() == 2);
+        check("cadastros por dia: dia 1 = 1, dia 5 = 2, 30 posições", r.cadastrosPorDia().length == 30 && r.cadastrosPorDia()[0] == 1 && r.cadastrosPorDia()[4] == 2);
+        check("alunos por plano: Plus 3, Básico 1 (só ativos), Plus primeiro", r.alunosPorPlano().get("Plus") == 3 && r.alunosPorPlano().get("Básico") == 1
+                && r.alunosPorPlano().keySet().iterator().next().equals("Plus") && !r.alunosPorPlano().containsKey("Premium"));
+        check("TotalPass = 1 e convencional = 3", r.totalPass() == 1 && r.convencional() == 3);
+        check("cobranças do mês: 1 paga, 1 pendente, 1 atrasada, 1 cancelada",
+                r.cobrancasPagas() == 1 && r.cobrancasPendentes() == 1 && r.cobrancasAtrasadas() == 1 && r.cobrancasCanceladas() == 1);
+        check("recebido no mês = 200 (regime de caixa: inclui outubro pago em novembro)", r.recebidoMes().compareTo(new BigDecimal("200.00")) == 0);
+        check("recebido no mês anterior = 50", r.recebidoMesAnterior().compareTo(new BigDecimal("50.00")) == 0);
+        check("recebido hoje = 0", r.recebidoHoje().signum() == 0);
+        check("a receber do mês = 50 (só pendente ainda não vencida)", r.aReceberMes().compareTo(new BigDecimal("50.00")) == 0);
+        check("atrasado do mês = 80 e atrasado total = 200 (todos os meses)", r.atrasadoMes().compareTo(new BigDecimal("80.00")) == 0
+                && r.atrasadoTotal().compareTo(new BigDecimal("200.00")) == 0);
+        check("2 alunos em atraso (Davi e Carla)", r.alunosEmAtraso() == 2);
+        check("adimplência do mês = 1 de 3 = 33,3% (cancelada fora)", Math.abs(r.adimplencia() - 33.333) < 0.01);
+        check("recebido por forma: Pix 100 e Cartão 100", r.recebidoPorForma().get("PIX").compareTo(new BigDecimal("100.00")) == 0
+                && r.recebidoPorForma().get("CARTAO").compareTo(new BigDecimal("100.00")) == 0);
+        check("lista de atrasos: a mais antiga primeiro (Carla 26 dias, depois Davi 3 dias)", r.atrasos().size() == 2
+                && r.atrasos().get(0).aluno().equals("Carla") && r.atrasos().get(0).diasAtraso() == 26 && r.atrasos().get(1).diasAtraso() == 3);
+        check("vencem em 7 dias: só a do Bruno (a do Davi já está atrasada)", r.vencemEmBreve().size() == 1 && r.vencemEmBreve().get(0).alunoNome().equals("Bruno"));
+        check("últimos 6 meses terminam no mês escolhido, com recebido 200 e em aberto 130",
+                r.ultimosMeses().size() == 6 && r.ultimosMeses().get(5).mes().equals(YearMonth.of(2026, 11))
+                        && r.ultimosMeses().get(5).recebido().compareTo(new BigDecimal("200.00")) == 0
+                        && r.ultimosMeses().get(5).emAberto().compareTo(new BigDecimal("130.00")) == 0);
+        check("cadastros recentes: os mais novos primeiro", r.cadastrosRecentes().get(0).dataInicio().equals(LocalDate.of(2026, 11, 5)));
+
+        Indicadores.Resultado out = Indicadores.calcular(YearMonth.of(2026, 10), hoje, alunos, pagamentos);
+        check("mês de outubro: recebido 50, atrasada a de Carla (120), cadastros 2", out.recebidoMes().compareTo(new BigDecimal("50.00")) == 0
+                && out.atrasadoMes().compareTo(new BigDecimal("120.00")) == 0 && out.cadastrosMes() == 2 && out.cadastrosHoje() == 2);
+
+        Indicadores.Resultado vazio = Indicadores.calcular(YearMonth.of(2026, 1), hoje, alunos, pagamentos);
+        check("mês sem cobranças: adimplência indefinida (NaN) e 31 dias no gráfico", Double.isNaN(vazio.adimplencia()) && vazio.cadastrosPorDia().length == 31);
+        check("sem dados nenhum: não quebra", Indicadores.calcular(YearMonth.of(2026, 11), hoje, List.of(), List.of()).alunosAtivos() == 0);
+        check("variação: 200 sobre 50 = +300%; sem base = NaN", Indicadores.Resultado.variacao(200, 50) == 300.0 && Double.isNaN(Indicadores.Resultado.variacao(5, 0)));
+        check("situação: pendente vencida vira ATRASADO; pendente em dia continua", Indicadores.situacao(pagamentos.get(2), hoje).equals("ATRASADO")
+                && Indicadores.situacao(pagamentos.get(1), hoje).equals("PENDENTE"));
+    }
+
+    // ---------- Biblioteca de exercícios ----------
+    static void biblioteca() {
+        System.out.println("\n[Biblioteca de exercícios]");
+        check("sem filtro devolve o catálogo todo", BibliotecaExercicios.filtrar(null, "").size() == BibliotecaExercicios.LISTA.size());
+        check("filtro por grupo só traz o grupo", BibliotecaExercicios.filtrar("Peito", "").stream().allMatch(e -> e.grupo().equals("Peito"))
+                && !BibliotecaExercicios.filtrar("Peito", "").isEmpty());
+        check("busca ignora acento e maiúscula (\"TRICEPS\" acha Tríceps)", !BibliotecaExercicios.filtrar(null, "TRICEPS").isEmpty());
+        check("busca sem resultado devolve lista vazia", BibliotecaExercicios.filtrar(null, "xyzxyz").isEmpty());
+        check("buscar por nome exato acha o exercício", BibliotecaExercicios.buscar("supino reto com barra").isPresent());
+        boolean modelosOk = true;
+        for (var m : BibliotecaExercicios.MODELOS)
+            for (var t : m.treinos()) for (String n : t.exercicios()) if (BibliotecaExercicios.buscar(n).isEmpty()) { modelosOk = false; System.out.println("    exercício do modelo fora do catálogo: " + n); }
+        check("todo exercício dos modelos de ficha existe no catálogo", modelosOk);
     }
 
     // ---------- mini-framework ----------

@@ -58,7 +58,7 @@ public final class DialogoForm {
         raiz.add(conteudo instanceof Formulario f && !f.temLinhaGrande() ? f.noTopo() : conteudo, BorderLayout.CENTER);
 
         // --- Rodapé: botões à direita ---
-        JPanel rodape = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel rodape = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         rodape.setOpaque(false);
         JButton cancelar = Theme.button(textoSalvar == null ? "Fechar" : "Cancelar");
         cancelar.addActionListener(e -> d.dispose());

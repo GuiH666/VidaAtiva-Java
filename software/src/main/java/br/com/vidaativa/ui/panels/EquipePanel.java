@@ -53,10 +53,20 @@ public class EquipePanel extends PainelBase {
         }, logado.id());
 
         // --- Abas ---
-        JTabbedPane abas = new JTabbedPane();
-        abas.addTab("Funcionários", funcionarios);
-        abas.addTab("Professores", professores);
-        add(abas, java.awt.BorderLayout.CENTER);
+        // Duas "pílulas" no topo trocam entre as listas (no lugar das abas padrão do Swing).
+        java.awt.CardLayout cartas = new java.awt.CardLayout();
+        javax.swing.JPanel pilha = new javax.swing.JPanel(cartas);
+        pilha.setOpaque(false);
+        pilha.add(funcionarios, "Funcionários");
+        pilha.add(professores, "Professores");
+        br.com.vidaativa.ui.componentes.Opcoes<String> abas = br.com.vidaativa.ui.componentes.Opcoes.texto(List.of("Funcionários", "Professores"), false);
+        abas.setSelecionado("Funcionários");
+        abas.aoMudar(nomeAba -> cartas.show(pilha, nomeAba));
+        javax.swing.JPanel corpo = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
+        corpo.setOpaque(false);
+        corpo.add(abas, java.awt.BorderLayout.NORTH);
+        corpo.add(pilha, java.awt.BorderLayout.CENTER);
+        add(corpo, java.awt.BorderLayout.CENTER);
     }
 
     /** Recarrega as duas abas (funcionários e professores) a cada vez que a tela é aberta. */

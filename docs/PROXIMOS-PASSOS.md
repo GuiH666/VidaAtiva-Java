@@ -33,7 +33,7 @@ cadastro de aluno/funcionário/professor, geração de mensalidades, registrar p
 - [ ] *(achado na revisão)* Listagens de pagamentos e o resumo fazem `UPDATE` (marcar atrasados) dentro de uma leitura.
 - [ ] *(achado na revisão)* `AlunoDAO.atualizar` não avisa se o id não existe; regras "ficha só para Plus/Premium" e
       "avaliação só para Premium" estão só nas telas, não nos DAOs nem na API.
-- [ ] *(achado na revisão)* `TreinoEditor`: se o dia da semana gravado não estiver na lista, ele se perde ao salvar.
+- [ ] *(redesenho v3)* `TreinoPanel`: se o dia da semana gravado não for um dos sete dias, ele aparece sem seleção e é gravado como "sem dia" ao salvar.
 - [ ] *(achado na revisão)* `LoginFrame` e `ResumoPanel` consultam o banco na thread da interface (a tela pode "travar"
       por instantes se o banco demorar). Usar `SwingWorker`.
 - [ ] *(achado na revisão)* Token da API não pode ser revogado (trocar a senha não invalida; vale 8 h). Limite de login é por IP
@@ -47,7 +47,7 @@ cadastro de aluno/funcionário/professor, geração de mensalidades, registrar p
 
 - [ ] Pagamento online (hoje o aluno só consulta; recebimento é feito na recepção).
 - [ ] Recuperação de senha do aluno por e-mail.
-- [ ] Relatórios: inadimplência, alunos ativos por plano, evolução de avaliações.
+- [ ] Relatórios: o dashboard do gerente já mostra inadimplência e alunos por plano; faltam exportar (PDF/CSV) e a evolução de avaliações.
 - [ ] Cadastro de planos pelo software (hoje só direto no banco).
 - [ ] Agendamento de avaliações / aulas.
 
@@ -57,3 +57,11 @@ cadastro de aluno/funcionário/professor, geração de mensalidades, registrar p
 - [ ] `api.secret` forte e **trocar todas as senhas de demonstração** (`seed.sql` não deve ir para produção).
 - [ ] Backup automático do banco.
 - [ ] Pool de conexões (hoje cada operação abre uma conexão).
+
+## Redesenho visual (v3): o que ainda precisa de teste com banco real
+
+- [ ] As telas foram conferidas por capturas com dados de exemplo (sem MySQL no ambiente de desenvolvimento). Abra no seu
+      ambiente: Painel do gerente, Alunos, Pagamentos, Fichas (criar, editar, copiar, consulta) e confira com dados reais.
+- [ ] Dashboard: "cadastro" usa a data de início do aluno. Se o cadastro puder ser retroativo, vale criar uma coluna `criado_em`.
+- [ ] O dashboard carrega tudo em memória (alunos + cobranças). Para milhares de alunos, trocar por consultas agregadas em SQL.
+- [ ] As fontes seguem a lista Segoe UI, Inter, SF Pro Text, Helvetica Neue, Roboto, Noto Sans; sem nenhuma, usa a padrão do Java.

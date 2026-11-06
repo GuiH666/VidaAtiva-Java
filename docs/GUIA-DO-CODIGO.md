@@ -6,7 +6,10 @@ Leia antes `ARQUITETURA.md`. Caminhos do Java são relativos a `software/src/mai
 
 | Quero mudar... | Arquivo |
 |---|---|
-| Cores, fontes e botões do software | `ui/Theme.java` |
+| Cores, fontes e botões do software (tema escuro) | `ui/Theme.java` (cores/fontes) e `ui/estilo/*` (botão, campo, combo, rolagem) |
+| Ícones | `ui/Icones.java` (desenhados em código, sem arquivos de imagem) |
+| Componentes prontos (cartão, indicador, pílulas, grades) | `ui/componentes/*` — veja `docs/DESIGN.md` |
+| Gráficos (barras e rosca) | `ui/grafico/*` |
 | Mensagens de erro/aviso, tabelas, formatação de data e moeda | `ui/UI.java` |
 | Layout padrão de formulários (rótulo + campo, seções, ajuda) | `ui/Formulario.java` |
 | Janela de login do software | `ui/LoginFrame.java` |
@@ -14,9 +17,13 @@ Leia antes `ARQUITETURA.md`. Caminhos do Java são relativos a `software/src/mai
 | Tela de alunos (cadastro) | `ui/panels/AlunosPanel.java` |
 | Cadastro de funcionários e professores | `ui/panels/PessoalPanel.java` (genérico) e `EquipePanel.java` |
 | Tela e geração de mensalidades | `ui/panels/PagamentosPanel.java` |
-| Editor de ficha de treino | `ui/panels/FichaDialog.java` (dados gerais) e `TreinoEditor.java` (exercícios) |
+| Lista de fichas de treino | `ui/panels/FichasPanel.java` |
+| Editor de ficha de treino (tela cheia) | `ui/panels/FichaEditor.java` (dados + treinos), `TreinoPanel.java` (exercícios de um treino) e `BibliotecaPanel.java` |
+| Exercícios e modelos de ficha prontos | `service/BibliotecaExercicios.java` |
 | Avaliações físicas | `ui/panels/AvaliacoesPanel.java` |
-| Cards do painel inicial | `ui/panels/ResumoPanel.java` + `dao/ResumoDAO.java` |
+| Painel do gerente (dashboard) | `ui/panels/GerentePainel.java` |
+| Números do dashboard (fórmulas) | `service/Indicadores.java` (testado) + `dao/DashboardDAO.java` (só leitura do banco) |
+| Cards do painel inicial de funcionário/professor | `ui/panels/ResumoPanel.java` + `dao/ResumoDAO.java` |
 | Preço da mensalidade por plano/TotalPass | `service/Precificacao.java` |
 | Validação de documento (CPF/RG), e-mail, telefone, usuário e senha | `service/Validacao.java` |
 | Qualquer SQL | `dao/*.java` |
@@ -42,7 +49,7 @@ Leia antes `ARQUITETURA.md`. Caminhos do Java são relativos a `software/src/mai
 ### Criar uma tela nova no software
 
 1. Crie `ui/panels/MinhaTelaPanel.java` estendendo `PainelBase` (título + subtítulo no construtor; implemente `recarregar()`).
-2. Use `UI.tabela(...)`, `Theme.primary(...)`, `Formulario` e `DialogoForm.abrir(...)` para manter o padrão visual.
+2. Use `UI.tabela(...)`, `Theme.primary(...)`, `Formulario` e `DialogoForm.abrir(...)` para manter o padrão visual. Para indicadores use `KpiCard`, para blocos `Cartao`, para escolhas curtas `Opcoes` e para telas que mudam de largura `GradeFluida`/`PilhaVertical` (`ui/componentes`).
 3. Busque dados por um DAO (crie um se for assunto novo).
 4. Registre no menu em `DashboardFrame.montarMenu`, só para os perfis que podem ver.
 
@@ -83,3 +90,14 @@ escritos como reserva caso a API esteja fora do ar; atualize-os também.
 - `TestesApi`: sobe a API numa porta aleatória com dados em memória e testa as rotas. Sem banco.
 
 As telas e os DAOs ainda não têm teste automático: teste-os abrindo o software com o banco de demonstração.
+
+### Mudar uma definição do dashboard (ex.: o que conta como "em atraso")
+
+1. A fórmula está em `service/Indicadores.calcular` e as definições, em português, no Javadoc da classe.
+2. Ajuste o cálculo e o teste correspondente em `TestesLogica.painelGerente` (os dados do teste são pequenos e comentados).
+3. O painel (`GerentePainel`) só desenha o resultado; não calcula nada.
+
+### Adicionar um exercício à biblioteca da ficha
+
+Inclua uma linha em `service/BibliotecaExercicios.LISTA` (nome, grupo, séries, repetições, descanso). Se for usar em um
+modelo de ficha, o nome precisa ser igual (o teste `biblioteca()` confere).
