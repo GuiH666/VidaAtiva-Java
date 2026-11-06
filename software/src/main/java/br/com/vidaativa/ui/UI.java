@@ -81,8 +81,7 @@ public final class UI {
         // Validação e erro de SQL já têm mensagem clara; só os demais (falhas inesperadas) imprimem o stack trace no console.
         if (!validacao && !(e instanceof SQLException)) e.printStackTrace();
         String msg = e.getMessage() == null || e.getMessage().isBlank() ? e.getClass().getSimpleName() : e.getMessage();
-        JOptionPane.showMessageDialog(pai, mensagemLarga(msg), validacao ? "Atenção" : "Erro",
-                validacao ? JOptionPane.WARNING_MESSAGE : JOptionPane.ERROR_MESSAGE);
+        CaixaMensagem.mostrar(pai, validacao ? CaixaMensagem.Tipo.ATENCAO : CaixaMensagem.Tipo.ERRO, msg);
     }
 
     /**
@@ -91,7 +90,7 @@ public final class UI {
      * @param pai componente sobre o qual a caixa abre (pode ser null)
      */
     public static void info(Component pai, String msg) {
-        JOptionPane.showMessageDialog(pai, mensagemLarga(msg), "Vida Ativa", JOptionPane.INFORMATION_MESSAGE);
+        CaixaMensagem.mostrar(pai, CaixaMensagem.Tipo.INFO, msg);
     }
 
     /**
@@ -100,22 +99,7 @@ public final class UI {
      * @return {@code true} só se o usuário clicar em Sim; fechar a caixa conta como Não
      */
     public static boolean confirmar(Component pai, String msg) {
-        return JOptionPane.showConfirmDialog(pai, mensagemLarga(msg), "Confirmar", JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION;
-    }
-
-    /** Mensagens longas quebram em linhas em vez de criar uma janela gigante. */
-    private static Object mensagemLarga(String msg) {
-        // O JOptionPane aceita qualquer objeto como "mensagem"; uma JTextArea com quebra de linha limita a largura da caixa.
-        JTextArea area = new JTextArea(msg);
-        area.setLineWrap(true);
-        area.setWrapStyleWord(true);
-        area.setEditable(false);
-        area.setOpaque(false);
-        area.setForeground(Theme.TEXT);
-        area.setColumns(Math.min(55, Math.max(24, msg.length())));
-        area.setSize(new Dimension(460, 10));
-        return area;
+        return CaixaMensagem.perguntar(pai, msg);
     }
 
     /** Cria um rótulo (JLabel) em cinza, usado ao lado dos campos dos formulários e em subtítulos. */

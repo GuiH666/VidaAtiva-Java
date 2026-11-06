@@ -63,6 +63,17 @@ Em *Pagamentos* (gerente e funcionário) a lista fica à esquerda e, à direita,
 Na lista de *Alunos* há a coluna **Financeiro** (Em dia, A vencer, Em atraso, Sem cobrança, olhando o mês atual) e o filtro **Só em atraso**.
 Essas colunas aparecem para gerente e funcionário; o professor não as vê.
 
+## Caixas de mensagem (confirmar, atenção, erro, informação)
+
+Todas as perguntas e avisos do software (excluir, cancelar cobrança, "selecione um aluno", erros de validação ou de banco) usam a
+mesma caixa, `ui/CaixaMensagem.java`, chamada por `UI.confirmar`, `UI.info` e `UI.erro`. Ela tem ícone redondo colorido
+(? verde para confirmar, ! amarelo para atenção, i azul para informação, × vermelho para erro), título, texto e botões
+("Cancelar" / "Sim, confirmar", ou só "OK"). O tamanho se ajusta ao texto; Enter confirma e Esc fecha (em pergunta, fechar = não).
+
+Antes (v3.3 e anteriores) elas usavam o `JOptionPane` do Java, que no tema escuro abria como uma janela preta enorme, com texto e botões invisíveis.
+
+![caixa](img/caixa-confirmar.png)
+
 ## Aviso de cobrança (WhatsApp / e-mail)
 
 Em *Pagamentos*, selecione uma cobrança em aberto e clique em **Avisar aluno**:

@@ -24,6 +24,7 @@ Leia antes `ARQUITETURA.md`. Caminhos do Java são relativos a `software/src/mai
 | Painel do gerente (dashboard) | `ui/panels/GerentePainel.java` |
 | Painel da recepção (funcionário) | `ui/panels/FuncionarioPainel.java` |
 | Histórico de pagamentos de um aluno | `ui/panels/HistoricoAlunoPanel.java` (tela) + `service/HistoricoPagamentos.java` (resumo e filtros, testado) + `PagamentoDAO.historicoDoAluno` |
+| Caixas de confirmação/aviso/erro | `ui/CaixaMensagem.java` (chamada só por `UI.confirmar`, `UI.info`, `UI.erro`) |
 | Aplicativo com ícone (empacotar, atalho, ícone das janelas) | `software/empacotar.bat`, `software/empacotamento/`, `ui/IconeApp.java`, `docs/APLICATIVO.md` |
 | Aviso de cobrança (WhatsApp/e-mail) | `ui/panels/AvisoCobrancaDialog.java` (janela) + `service/MensagemCobranca.java` (texto e links, testado) + botão "Avisar aluno" em `PagamentosPanel` |
 | Coluna "Financeiro" da lista de alunos | `AlunosPanel` + `HistoricoPagamentos.situacaoFinanceira` |
