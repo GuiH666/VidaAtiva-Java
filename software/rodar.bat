@@ -36,7 +36,7 @@ if errorlevel 1 (
 )
 
 echo Abrindo o Vida Ativa...
-java -cp "out;lib\*" br.com.vidaativa.ui.Main
+java -cp "out;src\main\resources;lib\*" br.com.vidaativa.ui.Main
 if errorlevel 1 pause
 exit /b 0
 

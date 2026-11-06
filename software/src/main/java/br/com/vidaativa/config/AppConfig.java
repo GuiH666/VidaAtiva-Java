@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -16,8 +18,8 @@ import java.util.Properties;
  * Ordem de prioridade (a primeira que existir vence):
  *   1. Variáveis de ambiente (VIDAATIVA_DB_URL, VIDAATIVA_DB_USER, VIDAATIVA_DB_PASSWORD,
  *      VIDAATIVA_API_PORT, VIDAATIVA_API_SECRET, VIDAATIVA_CORS_ORIGIN, VIDAATIVA_API_AUTOSTART)
- *   2. Arquivo config.properties (na pasta onde o programa roda, em ./software ou no caminho
- *      informado em -Dvidaativa.config=...)
+ *   2. Arquivo config.properties (na pasta onde o programa roda, em ./software, ao lado do aplicativo
+ *      empacotado, em ~/VidaAtiva/ ou no caminho informado em -Dvidaativa.config=..., que então é o único tentado)
  *   3. Valores padrão abaixo
  *
  * A senha do banco NUNCA deve ficar escrita no código. Copie config.properties.example
@@ -37,6 +39,22 @@ public final class AppConfig {
      * Monta as propriedades na ordem: padrões, depois config.properties (se existir), depois variáveis de ambiente.
      * Se o arquivo existir mas não puder ser lido, só avisa no console e segue com os padrões.
      */
+    /**
+     * Onde procurar o config.properties quando -Dvidaativa.config não foi informado, na ordem:
+     * pasta atual; ./software; pasta do aplicativo empacotado (ao lado do .exe); e {@code VidaAtiva/config.properties}
+     * dentro da pasta do usuário (o melhor lugar para o aplicativo instalado, porque não exige permissão de administrador).
+     */
+    private static Path[] locaisPadrao() {
+        List<Path> lista = new ArrayList<>();
+        lista.add(Path.of("config.properties"));
+        lista.add(Path.of("software", "config.properties"));
+        String exe = System.getProperty("jpackage.app-path");   // só existe quando aberto pelo aplicativo empacotado
+        if (exe != null && !exe.isBlank() && Path.of(exe).getParent() != null) lista.add(Path.of(exe).getParent().resolve("config.properties"));
+        String casa = System.getProperty("user.home");
+        if (casa != null && !casa.isBlank()) lista.add(Path.of(casa, "VidaAtiva", "config.properties"));
+        return lista.toArray(new Path[0]);
+    }
+
     private static Properties carregar() {
         // Os padrões vêm primeiro de propósito: assim todo getProperty abaixo sempre encontra valor, mesmo sem arquivo.
         Properties p = new Properties();
@@ -53,7 +71,7 @@ public final class AppConfig {
         String custom = System.getProperty("vidaativa.config");
         Path[] candidatos = custom != null && !custom.isBlank()
                 ? new Path[] { Path.of(custom) }
-                : new Path[] { Path.of("config.properties"), Path.of("software", "config.properties") };
+                : locaisPadrao();
         for (Path c : candidatos) {
             if (Files.isRegularFile(c)) {
                 try (InputStream in = Files.newInputStream(c)) {

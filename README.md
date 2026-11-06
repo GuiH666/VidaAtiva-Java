@@ -34,6 +34,7 @@ VidaAtiva_Java/
 ├── database/               schema.sql · seed.sql · migrations/ · README.md
 ├── software/               Programa desktop + API (Java 21, Maven)
 │   ├── rodar.bat / .sh       Compila e abre o software
+│   ├── empacotar.bat         Gera o aplicativo "Vida Ativa.exe" (com ícone e atalho na área de trabalho)
 │   ├── testar.bat / .sh      Compila e roda os testes automáticos
 │   ├── config.properties.example
 │   └── src/main/java/br/com/vidaativa/
@@ -51,6 +52,7 @@ Requisitos: **JDK 21+** (`javac -version`) e **MySQL 8**.
 2. **Configuração**: copie `software/config.properties.example` para `software/config.properties` e coloque a senha do seu MySQL em `db.password`.
 3. **Software + API**: dois cliques em `software/rodar.bat` (Windows) ou `software/rodar.sh`.
    Também funciona com Maven (`cd software && mvn compile exec:java`) ou pela IDE (classe `br.com.vidaativa.ui.Main`).
+   **Aplicativo com ícone na área de trabalho (Windows):** dois cliques em `software/empacotar.bat` (veja `docs/APLICATIVO.md`).
    > Não use o botão "Run Code" sobre o `Main.java` solto: o projeto tem pacotes e não compila assim.
 4. **Site**: abra `site/pages/home.html` com a extensão *Live Server* do VS Code (ou `python -m http.server 8000` dentro de `site/`).
    O software precisa estar aberto, porque a API roda nele.
@@ -82,3 +84,8 @@ Requisitos: **JDK 21+** (`javac -version`) e **MySQL 8**.
 
 Detalhes e fluxos em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
 
+## Para quem vai continuar o projeto
+
+1. Leia `docs/ARQUITETURA.md` e `docs/GUIA-DO-CODIGO.md`.
+2. Siga `docs/CONTRIBUINDO.md` (branches, testes, checklist).
+3. Veja `docs/PROXIMOS-PASSOS.md`: lista do que melhorar (visual dos cadastros, problemas já conhecidos, funcionalidades futuras).

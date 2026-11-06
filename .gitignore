@@ -9,3 +9,5 @@ lib/
 .DS_Store
 *.log
 out-testes/
+build-app/
+dist/

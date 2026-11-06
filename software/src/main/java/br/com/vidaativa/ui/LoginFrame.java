@@ -26,6 +26,7 @@ public class LoginFrame extends JFrame {
     public LoginFrame() {
         setTitle("Vida Ativa — Software de Gestão");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        IconeApp.aplicar(this);
 
         JPanel raiz = new JPanel(new BorderLayout());
         raiz.add(painelMarca(), BorderLayout.WEST);

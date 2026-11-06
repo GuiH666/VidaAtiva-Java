@@ -56,6 +56,7 @@ public class DashboardFrame extends JFrame {
         setTitle("Vida Ativa — " + rotuloPerfil(usuario.perfil()));
         // Fechar esta janela encerra o programa. (O botão Sair é diferente: volta para o login.)
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        IconeApp.aplicar(this);
         setLayout(new BorderLayout());
         add(criarLateral(), BorderLayout.WEST);
         conteudo.setBackground(Theme.BG);

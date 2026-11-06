@@ -7,4 +7,4 @@ mkdir -p lib
 [ -f lib/mysql-connector-j-8.4.0.jar ] || curl -L -o lib/mysql-connector-j-8.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar
 rm -rf out && mkdir out
 javac -encoding UTF-8 -cp "lib/*" -sourcepath src/main/java -d out src/main/java/br/com/vidaativa/ui/Main.java
-java -cp "out:lib/*" br.com.vidaativa.ui.Main
+java -cp "out:src/main/resources:lib/*" br.com.vidaativa.ui.Main
