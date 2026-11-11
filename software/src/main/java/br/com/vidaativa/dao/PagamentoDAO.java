@@ -89,6 +89,30 @@ public class PagamentoDAO {
         return lista;
     }
 
+    /** Cobrança pelo id (qualquer status), ou null se não existir. Usado pelo pagamento online. */
+    public Pagamento buscarPorId(int pagamentoId) throws SQLException {
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(SELECT + "WHERE p.id = ?")) {
+            ps.setInt(1, pagamentoId);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next() ? mapear(rs) : null; }
+        }
+    }
+
+    /**
+     * Cobrança de um aluno em um mês (AAAA-MM), qualquer status, ou null. Usado pelo pagamento online: o aluno vem do token
+     * de login e a mensalidade é achada POR ELE, então um aluno nunca alcança a cobrança de outro.
+     */
+    public Pagamento buscarDoAluno(int alunoId, String referencia) throws SQLException {
+        try (Connection c = Database.getConnection()) {
+            marcarAtrasados(c);
+            try (PreparedStatement ps = c.prepareStatement(SELECT + "WHERE p.aluno_id = ? AND p.referencia = ?")) {
+                ps.setInt(1, alunoId);
+                ps.setString(2, referencia);
+                try (ResultSet rs = ps.executeQuery()) { return rs.next() ? mapear(rs) : null; }
+            }
+        }
+    }
+
     /**
      * Histórico completo de um aluno: todas as cobranças, inclusive pagas, em aberto e canceladas, da referência mais
      * recente para a mais antiga. Usado pelo painel "Histórico do aluno" da tela Pagamentos.

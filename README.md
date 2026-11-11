@@ -16,7 +16,8 @@ Software (equipe) ──JDBC──▶ MySQL ◀──JDBC── API (porta 8080)
 - **Funcionário (recepção)**: painel do dia (cobranças, atrasos, vencimentos, aniversariantes), cadastro de alunos, pagamentos, histórico de pagamentos de cada aluno e aviso de cobrança por WhatsApp/e-mail (mensagem pronta).
 - **Gerente**: acompanha a academia num dashboard (cadastros e recebimentos do mês e do dia, atrasos) e cadastra funcionários e professores. **Funcionário**: cadastra alunos e controla pagamentos.
   **Professor**: monta fichas de treino e registra avaliações físicas.
-- **Aluno**: entra no site e vê plano, treino, avaliações e mensalidades.
+- **Aluno**: entra no site e vê plano, treino, avaliações e mensalidades. Pode **pagar a mensalidade por Pix ou cartão** no próprio site
+  (recurso opcional, desligado por padrão; veja `docs/PAGAMENTO-ONLINE.md`) e o software contabiliza sozinho.
 
 ## Estrutura do repositório
 
@@ -28,6 +29,7 @@ VidaAtiva_Java/
 │   ├── GUIA-DO-CODIGO.md     "Onde mexo para...?" + receitas passo a passo
 │   ├── DESIGN.md             Identidade visual, componentes e dashboard do gerente
 │   ├── API.md                Rotas do site
+│   ├── PAGAMENTO-ONLINE.md   Pagamento por Pix/cartão no site: como liga, segurança, limites
 │   ├── CONTRIBUINDO.md       Ambiente, testes, Git, checklist de Pull Request
 │   ├── OPERACAO.md           Incidentes, metas de serviço, roteiros de atendimento, registro de mudanças
 │   └── PROXIMOS-PASSOS.md    Melhorias, problemas conhecidos, o que falta
@@ -72,7 +74,7 @@ Requisitos: **JDK 21+** (`javac -version`) e **MySQL 8**.
 ## Testes
 
 `software/testar.bat` (ou `./testar.sh`): roda `TestesLogica` (regras, validação, senha, token, números do dashboard e da recepção, histórico de pagamentos, aviso de cobrança, biblioteca de exercícios) e `TestesApi`
-(todas as rotas, com dados em memória, sem precisar de MySQL). Esperado: `0 falha(s)`.
+(todas as rotas, com dados em memória, sem precisar de MySQL) e `TestesPagamentoOnline` (pagamento online: regras, concorrência, Mercado Pago simulado). Esperado: `0 falha(s)`.
 
 ## Regras de negócio (resumo)
 

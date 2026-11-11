@@ -79,6 +79,33 @@ CREATE TABLE IF NOT EXISTS pagamentos (
     UNIQUE KEY uq_pag_aluno_ref (aluno_id, referencia)
 );
 
+-- Pagamento online (Pix/cartão pelo site). Veja database/migrations/v3-pagamento-online.sql.
+-- Uma linha por TENTATIVA de pagamento online de uma cobrança. O dinheiro só conta quando status = 'APROVADA'
+-- (nesse momento a cobrança em "pagamentos" vira PAGO). Estados: CRIADA, AGUARDANDO, APROVADA, RECUSADA, EXPIRADA, FALHOU,
+-- APROVADA_SEM_BAIXA (pagou mas a cobrança já estava paga/cancelada: conferir e devolver) e DIVERGENTE (valor diferente).
+CREATE TABLE IF NOT EXISTS transacoes_pagamento (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    pagamento_id INT NOT NULL,
+    aluno_id INT NOT NULL,
+    provedor VARCHAR(20) NOT NULL,
+    metodo ENUM('PIX','CARTAO') NOT NULL,
+    id_externo VARCHAR(80),
+    status VARCHAR(24) NOT NULL DEFAULT 'CRIADA',
+    valor DECIMAL(10,2) NOT NULL,
+    pix_copia_cola TEXT,
+    pix_qr_base64 MEDIUMTEXT,
+    url_checkout VARCHAR(600),
+    expira_em DATETIME,
+    criado_em DATETIME NOT NULL,
+    atualizado_em DATETIME NOT NULL,
+    observacao VARCHAR(300),
+    CONSTRAINT fk_trans_pag FOREIGN KEY (pagamento_id) REFERENCES pagamentos(id),
+    CONSTRAINT fk_trans_aluno FOREIGN KEY (aluno_id) REFERENCES alunos(id),
+    KEY idx_trans_pag (pagamento_id),
+    KEY idx_trans_status (status),
+    UNIQUE KEY uq_trans_ext (provedor, id_externo)
+);
+
 -- O aluno só enxerga no site as fichas com status ATIVA (RASCUNHO fica só para o professor).
 CREATE TABLE IF NOT EXISTS fichas_treino (
     id INT PRIMARY KEY AUTO_INCREMENT,
