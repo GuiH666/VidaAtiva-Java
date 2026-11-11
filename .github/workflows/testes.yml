@@ -1,0 +1,27 @@
+name: Testes
+
+# Compila o software e roda os testes automáticos a cada envio e a cada Pull Request.
+# Não precisa de MySQL: os testes usam dados em memória.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: software
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Testes automáticos
+        run: ./testar.sh
+      - name: Compilar o programa inteiro (telas incluídas)
+        run: |
+          mkdir -p out
+          javac -encoding UTF-8 -cp "lib/*" -d out $(find src/main/java -name '*.java')
