@@ -58,7 +58,7 @@ public final class AppConfig {
     private static Properties carregar() {
         // Os padrões vêm primeiro de propósito: assim todo getProperty abaixo sempre encontra valor, mesmo sem arquivo.
         Properties p = new Properties();
-        p.setProperty("db.url", "jdbc:mysql://localhost:3306/vida_ativa?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true&connectTimeout=5000&characterEncoding=UTF-8");
+        p.setProperty("db.url", "jdbc:mysql://localhost:3306/vida_ativa?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true&connectTimeout=5000&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci");
         p.setProperty("db.user", "root");
         p.setProperty("db.password", "");
         p.setProperty("api.port", "8080");
