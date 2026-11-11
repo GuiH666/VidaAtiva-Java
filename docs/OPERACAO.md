@@ -48,6 +48,11 @@ Quem abre: a recepção (ou o professor/aluno, por ela). Quem trata: o grupo de 
 - Cobrança errada e ainda não paga: em **Pagamentos**, cancele a cobrança e gere novamente. Cobrança paga não pode ser cancelada.
 - Gerar duas vezes no mês não duplica (uma cobrança por aluno por mês).
 
+**Erro "Incorrect string value ... for column 'nome'" ao salvar (ficha, aluno...)**
+1. O banco foi criado com outro conjunto de caracteres (não utf8mb4), então não aceita travessão (—), emojis etc.
+2. Rode `database/migrations/v3-1-utf8mb4.sql` (faça backup antes). Ele converte banco e tabelas sem perder dados.
+3. Reabra o software. Se continuar, envie o resultado de `SHOW CREATE TABLE treinos;` e `SHOW VARIABLES LIKE 'character_set%';`.
+
 **API ou banco fora do ar (P1)**
 1. Confira se o MySQL está rodando e se `config.properties` tem usuário e senha corretos.
 2. Reabra o software; a API sobe junto. Porta 8080 ocupada: ajuste `api.port` e o endereço em `site/assets/js/config.js`.

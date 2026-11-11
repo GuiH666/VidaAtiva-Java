@@ -24,7 +24,14 @@ public final class Database {
      */
     public static Connection getConnection() throws SQLException {
         try {
-            return DriverManager.getConnection(AppConfig.dbUrl(), AppConfig.dbUser(), AppConfig.dbPassword());
+            Connection c = DriverManager.getConnection(AppConfig.dbUrl(), AppConfig.dbUser(), AppConfig.dbPassword());
+            // Garante acentos e travessões (—) em qualquer config.properties, mesmo um antigo sem characterEncoding na URL.
+            try (java.sql.Statement st = c.createStatement()) {
+                st.execute("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+            } catch (SQLException ignorado) {
+                // servidor sem utf8mb4: segue com o que a URL negociou
+            }
+            return c;
         } catch (SQLException e) {
             // Relança com mensagem em português (aparece para o usuário na tela), mas preserva SQLState, código de erro
             // e a causa original para não perder informação de diagnóstico.

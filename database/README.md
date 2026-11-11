@@ -7,6 +7,7 @@ Um único banco, `vida_ativa`. O software grava nele por JDBC e o site lê pela 
 | `schema.sql` | Cria o banco e todas as tabelas (versão atual). Para instalação nova. |
 | `seed.sql` | Dados de demonstração (usuários, um aluno com plano, pagamentos, ficha e avaliação). Pode rodar mais de uma vez. |
 | `migrations/v1-para-v2.sql` | Atualiza um banco criado com o schema antigo. Pode rodar mais de uma vez. |
+| `migrations/v3-1-utf8mb4.sql` | Converte banco e tabelas para utf8mb4. Rode se aparecer "Incorrect string value" ao salvar (acentos/travessão). Pode rodar mais de uma vez. |
 
 ## Instalar do zero
 
