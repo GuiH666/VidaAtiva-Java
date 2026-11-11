@@ -33,6 +33,17 @@ if not exist lib\mysql-connector-j-8.4.0.jar (
 if not exist lib\gson-2.13.1.jar goto semlib
 if not exist lib\mysql-connector-j-8.4.0.jar goto semlib
 
+rem O Windows nao deixa apagar/atualizar a pasta dist enquanto o aplicativo estiver aberto.
+:conferir_aberto
+tasklist /fi "imagename eq Vida Ativa.exe" 2>nul | find /i "Vida Ativa.exe" >nul
+if not errorlevel 1 (
+  echo.
+  echo O aplicativo "Vida Ativa" esta ABERTO, e nao da para atualiza-lo enquanto isso.
+  echo Feche o Vida Ativa ^(se precisar, finalize "Vida Ativa.exe" no Gerenciador de Tarefas^) e depois
+  pause
+  goto conferir_aberto
+)
+
 echo [1/4] Compilando...
 if exist out rmdir /s /q out
 mkdir out
@@ -49,6 +60,14 @@ copy /y lib\mysql-connector-j-8.4.0.jar build-app\ >nul
 
 echo [3/4] Gerando o aplicativo ^(leva 1 a 2 minutos^)...
 if exist "dist\Vida Ativa" rmdir /s /q "dist\Vida Ativa"
+if exist "dist\Vida Ativa" (
+  echo.
+  echo [ERRO] Nao consegui apagar a pasta dist\Vida Ativa porque algo ainda esta usando os arquivos dela.
+  echo        Feche: o aplicativo Vida Ativa, janelas do Explorador de Arquivos abertas nessa pasta e terminais
+  echo        que estejam dentro dela. Se continuar, reinicie o computador e rode este arquivo de novo.
+  pause
+  exit /b 1
+)
 jpackage --type app-image --name "Vida Ativa" --app-version 1.0.0 --vendor "Os TraKinEirOs" ^
   --description "Vida Ativa - Software de Gestao da Academia" ^
   --input build-app --main-jar vida-ativa.jar --main-class br.com.vidaativa.ui.Main ^
