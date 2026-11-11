@@ -58,7 +58,7 @@ if errorlevel 1 goto erro
 copy /y lib\gson-2.13.1.jar build-app\ >nul
 copy /y lib\mysql-connector-j-8.4.0.jar build-app\ >nul
 
-rem --add-modules: garante no Java embutido a API (jdk.httpserver), o pagamento online (java.net.http e jdk.crypto.ec, para o HTTPS) e o MySQL.
+rem --add-modules: com esta opcao o jpackage NAO detecta modulos sozinho, entao a lista tem que ser COMPLETA (sem java.desktop o programa nao abre: "Failed to launch JVM"). jdk.crypto.ec = HTTPS do pagamento online.
 echo [3/4] Gerando o aplicativo ^(leva 1 a 2 minutos^)...
 if exist "dist\Vida Ativa" rmdir /s /q "dist\Vida Ativa"
 if exist "dist\Vida Ativa" (
@@ -73,7 +73,7 @@ jpackage --type app-image --name "Vida Ativa" --app-version 1.0.0 --vendor "Os T
   --description "Vida Ativa - Software de Gestao da Academia" ^
   --input build-app --main-jar vida-ativa.jar --main-class br.com.vidaativa.ui.Main ^
   --icon empacotamento\vida-ativa.ico --dest dist ^
-  --add-modules java.net.http,jdk.httpserver,java.sql,java.naming,jdk.crypto.ec ^
+  --add-modules java.base,java.desktop,java.logging,java.management,java.naming,java.net.http,java.sql,java.xml,java.prefs,java.security.sasl,java.transaction.xa,jdk.httpserver,jdk.crypto.ec,jdk.charsets,jdk.localedata,jdk.unsupported ^
   --java-options "-Dfile.encoding=UTF-8"
 if errorlevel 1 goto erro
 if not exist "dist\Vida Ativa\Vida Ativa.exe" goto erro
