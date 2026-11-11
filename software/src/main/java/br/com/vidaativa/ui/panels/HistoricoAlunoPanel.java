@@ -43,6 +43,8 @@ class HistoricoAlunoPanel extends Cartao {
     private final Function<Integer, List<Pagamento>> fonteCobrancas;
     private final Function<Integer, Aluno> fonteAluno;
     private final Supplier<LocalDate> hoje;
+    /** De onde vem o "pago online": id da cobrança -> provedor. Consultada a cada seleção de aluno. */
+    private final Supplier<java.util.Map<Integer, String>> fonteOnline;
 
     private final CardLayout cartas = new CardLayout();
     private final JPanel conteudo = new JPanel(cartas);
@@ -57,6 +59,7 @@ class HistoricoAlunoPanel extends Cartao {
     private int alunoId = -1;
     private List<Pagamento> todas = new ArrayList<>();
     private boolean montandoAnos;
+    private java.util.Map<Integer, String> online = java.util.Map.of();
 
     /** Rótulos das pílulas de situação (classe à parte só para a lambda de {@code Opcoes} ficar legível). */
     private static final class PainelRotulos {
@@ -79,11 +82,18 @@ class HistoricoAlunoPanel extends Cartao {
         }, id -> {
             try { return new AlunoDAO().buscarPorId(id); }
             catch (SQLException e) { return null; }   // o cabeçalho funciona sem os dados do cadastro
-        }, LocalDate::now);
+        }, LocalDate::now, () -> new br.com.vidaativa.dao.TransacaoDAO().origemOnline());
     }
 
+    /** Versão para demonstração: sem marcação de "online". */
     HistoricoAlunoPanel(Function<Integer, List<Pagamento>> fonteCobrancas, Function<Integer, Aluno> fonteAluno, Supplier<LocalDate> hoje) {
+        this(fonteCobrancas, fonteAluno, hoje, java.util.Map::of);
+    }
+
+    HistoricoAlunoPanel(Function<Integer, List<Pagamento>> fonteCobrancas, Function<Integer, Aluno> fonteAluno, Supplier<LocalDate> hoje,
+                        Supplier<java.util.Map<Integer, String>> fonteOnline) {
         super(new BorderLayout(), 20, 20);
+        this.fonteOnline = fonteOnline;
         this.fonteCobrancas = fonteCobrancas;
         this.fonteAluno = fonteAluno;
         this.hoje = hoje;
@@ -173,6 +183,7 @@ class HistoricoAlunoPanel extends Cartao {
             UI.erro(this, e);
             return;
         }
+        try { online = fonteOnline.get(); } catch (RuntimeException e) { online = java.util.Map.of(); }
         nome.setText(nomeAluno);
         Aluno a = fonteAluno.apply(id);
         detalhe.setText(a == null ? " " : "Plano " + a.plano() + "  ·  " + ("TOTALPASS".equals(a.tipoCliente()) ? "TotalPass" : "Convencional")
@@ -205,9 +216,17 @@ class HistoricoAlunoPanel extends Cartao {
         for (Pagamento p : vistas) {
             String s = br.com.vidaativa.service.Indicadores.situacao(p, h);
             m.addRow(new Object[]{data(p.vencimento()), data(p.data()), UI.moeda(p.valor()),
-                    UI.rotuloForma(p.formaPagamento()), UI.rotuloStatusPagamento(s)});
+                    rotuloForma(p), UI.rotuloStatusPagamento(s)});
         }
         contagem.setText(vistas.size() + (vistas.size() == 1 ? " cobrança" : " cobranças") + (vistas.size() == todas.size() ? "" : " de " + todas.size()));
+    }
+
+    /** "Pix", ou "Pix · online" quando o próprio aluno pagou pelo site ("· demo" se foi no modo de demonstração). */
+    private String rotuloForma(Pagamento p) {
+        String base = UI.rotuloForma(p.formaPagamento());
+        String prov = online.get(p.id());
+        if (prov == null || !"PAGO".equals(p.status())) return base;
+        return base + ("SIMULADO".equals(prov) ? " · demo" : " · online");
     }
 
     private void preencherEstatisticas() {

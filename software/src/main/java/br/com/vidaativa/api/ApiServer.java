@@ -2,6 +2,8 @@ package br.com.vidaativa.api;
 
 import br.com.vidaativa.config.AppConfig;
 import br.com.vidaativa.model.*;
+import br.com.vidaativa.online.PagamentoOnline;
+import br.com.vidaativa.online.ServicoPagamentoOnline;
 import br.com.vidaativa.security.TokenService;
 import br.com.vidaativa.service.Precificacao;
 import com.google.gson.*;
@@ -21,6 +23,8 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * API REST do site do aluno. Lê o MESMO banco que o software grava (banco central), então tudo que a
@@ -40,7 +44,14 @@ import java.util.concurrent.Executors;
  * GET     /api/aluno/me/pagamentos    sim     mensalidades do aluno (as canceladas não aparecem)
  * GET     /api/aluno/me/avaliacoes    sim     avaliações físicas do aluno (com o IMC calculado)
  * POST    /api/aluno/me/senha         sim     corpo {senhaAtual, novaSenha} -> {ok: true}
+ * GET     /api/aluno/me/pagamento-online                        sim  {ativo, provedor, demonstracao, metodos}: o pagamento online está ligado?
+ * POST    /api/aluno/me/pagamentos/AAAA-MM/online               sim  corpo {metodo: PIX|CARTAO, retorno} -> começa (ou retoma) o pagamento
+ * GET     /api/aluno/me/pagamentos/AAAA-MM/online               sim  situação do pagamento online (confere com o gateway)
+ * POST    /api/aluno/me/pagamentos/AAAA-MM/online/simular       sim  só no modo demonstração: corpo {aprovar: true|false}
+ * POST    /api/pagamentos/webhook/mercadopago                   não  aviso do Mercado Pago (assinatura conferida; nada do corpo é aceito como prova)
  * </pre>
+ * As rotas de pagamento online respondem 404 quando {@code pagamento.provedor=desligado}. Detalhes, segurança e limites em
+ * {@link ServicoPagamentoOnline} e docs/PAGAMENTO-ONLINE.md.
  * "Login? sim" significa enviar o cabeçalho {@code Authorization: Bearer <token>} com o token recebido em /api/login.
  * Outros códigos HTTP: 204 (pré-voo CORS, resposta a OPTIONS em qualquer caminho), 400 (JSON inválido, campo faltando ou
  * senha nova inválida), 401 (sem login, token inválido/expirado ou credenciais erradas), 404 (rota inexistente),
@@ -97,6 +108,9 @@ public class ApiServer {
     private final PortalDados dados;
     private final TokenService tokens;
     private final String corsOrigin;
+    // Pagamento online (Pix/cartão). null = desligado: as rotas de pagamento online respondem 404.
+    private final ServicoPagamentoOnline online;
+    private ScheduledExecutorService conferencia;
     // serializeNulls: campos sem valor saem como null no JSON (em vez de sumir), assim o site sempre encontra a chave.
     // O adaptador de LocalDate existe porque o Gson não consegue serializar java.time sozinho no Java 17+ (os módulos do
     // JDK bloqueiam o acesso por reflexão); com ele as datas viram texto "AAAA-MM-DD".
@@ -114,6 +128,14 @@ public class ApiServer {
      * @param corsOrigin origem do site autorizada no CORS; nulo ou vazio vira "*" (qualquer origem)
      */
     public ApiServer(PortalDados dados, TokenService tokens, String corsOrigin) {
+        this(dados, tokens, corsOrigin, null);
+    }
+
+    /**
+     * @param online serviço de pagamento online, ou null para deixar o recurso desligado
+     */
+    public ApiServer(PortalDados dados, TokenService tokens, String corsOrigin, ServicoPagamentoOnline online) {
+        this.online = online;
         this.dados = dados;
         this.tokens = tokens;
         this.corsOrigin = corsOrigin == null || corsOrigin.isBlank() ? "*" : corsOrigin;
@@ -139,11 +161,27 @@ public class ApiServer {
             return t;
         }));
         server.start();
+        if (online != null) {
+            // A cada 30 s pergunta ao gateway pelos pagamentos em aberto: é o que contabiliza o pagamento mesmo quando o aviso
+            // (webhook) do gateway não consegue chegar a este computador (a API roda na rede local da academia).
+            conferencia = Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "conferencia-pagamentos");
+                t.setDaemon(true);
+                return t;
+            });
+            conferencia.scheduleWithFixedDelay(() -> {
+                try { online.conferirAbertas(); }
+                catch (Throwable e) { System.err.println("[Pagamento] Conferência periódica falhou: " + e.getMessage()); }
+            }, 15, 30, TimeUnit.SECONDS);
+        }
         return server.getAddress().getPort();
     }
 
     /** Para o servidor imediatamente (sem esperar requisições em andamento). Não faz nada se nunca foi iniciado. */
-    public void stop() { if (server != null) server.stop(0); }
+    public void stop() {
+        if (conferencia != null) conferencia.shutdownNow();
+        if (server != null) server.stop(0);
+    }
 
     /**
      * Sobe a API junto com o software (chamado pelo Main). Se a porta estiver ocupada, só avisa no console.
@@ -152,7 +190,7 @@ public class ApiServer {
     public static synchronized void iniciarEmSegundoPlano() {
         if (ativo != null) return;
         try {
-            ApiServer api = new ApiServer(new DadosBanco(), new TokenService(AppConfig.apiSecret(), VALIDADE_TOKEN_SEGUNDOS), AppConfig.corsOrigin());
+            ApiServer api = new ApiServer(new DadosBanco(), new TokenService(AppConfig.apiSecret(), VALIDADE_TOKEN_SEGUNDOS), AppConfig.corsOrigin(), PagamentoOnline.daConfiguracao());
             int porta = api.start(AppConfig.apiPort());
             ativo = api;
             System.out.println("API Vida Ativa em http://localhost:" + porta + "/api/status");
@@ -170,7 +208,7 @@ public class ApiServer {
 
     /** Para subir só a API (sem a janela do software). */
     public static void main(String[] args) throws Exception {
-        ApiServer api = new ApiServer(new DadosBanco(), new TokenService(AppConfig.apiSecret(), VALIDADE_TOKEN_SEGUNDOS), AppConfig.corsOrigin());
+        ApiServer api = new ApiServer(new DadosBanco(), new TokenService(AppConfig.apiSecret(), VALIDADE_TOKEN_SEGUNDOS), AppConfig.corsOrigin(), PagamentoOnline.daConfiguracao());
         int porta = api.start(AppConfig.apiPort());
         System.out.println("API Vida Ativa em http://localhost:" + porta + "/api/status  (Ctrl+C para parar)");
         Thread.currentThread().join();
@@ -205,7 +243,14 @@ public class ApiServer {
                 case "/api/aluno/me/pagamentos" -> { exigir(ex, "GET"); json(ex, 200, pagamentos(aluno(ex))); }
                 case "/api/aluno/me/avaliacoes" -> { exigir(ex, "GET"); json(ex, 200, avaliacoes(aluno(ex))); }
                 case "/api/aluno/me/senha" -> { exigir(ex, "POST"); senha(ex); }
-                default -> throw new HttpErro(404, "Rota não encontrada.");
+                case "/api/aluno/me/pagamento-online" -> { exigir(ex, "GET"); aluno(ex); json(ex, 200, online == null ? Map.of("ativo", false) : online.opcoes()); }
+                case "/api/pagamentos/webhook/mercadopago" -> { exigir(ex, "POST"); webhook(ex); }
+                default -> {
+                    // Rotas com o mês na URL: /api/aluno/me/pagamentos/2026-11/online e .../online/simular
+                    java.util.regex.Matcher m = ROTA_ONLINE.matcher(caminho);
+                    if (!m.matches()) throw new HttpErro(404, "Rota não encontrada.");
+                    pagamentoOnline(ex, m.group(1), m.group(2) != null, metodo);
+                }
             }
         } catch (HttpErro e) {
             // Erro "esperado", lançado de propósito pelas rotas com o código HTTP certo (401, 404, 429...).
@@ -271,6 +316,59 @@ public class ApiServer {
         boolean ok = dados.alterarSenha(a.usuarioId(), texto(corpo, "senhaAtual"), texto(corpo, "novaSenha"));
         // 400 e não 401: o aluno ESTÁ logado, o que está errado é o dado enviado.
         if (!ok) throw new HttpErro(400, "A senha atual está incorreta.");
+        json(ex, 200, Map.of("ok", true));
+    }
+
+    /** Mês (AAAA-MM) e, opcionalmente, "/simular" depois de ".../online". */
+    private static final java.util.regex.Pattern ROTA_ONLINE =
+            java.util.regex.Pattern.compile("/api/aluno/me/pagamentos/(\\d{4}-\\d{2})/online(/simular)?");
+    /** Aviso do gateway: até 16 KB. */
+    private static final int MAX_CORPO_WEBHOOK = 16 * 1024;
+
+    /**
+     * Rotas do pagamento online de uma mensalidade. O aluno vem do token; a mensalidade é achada POR ele (aluno + mês),
+     * então um aluno nunca alcança a cobrança de outro nem escolhe o valor.
+     */
+    private void pagamentoOnline(HttpExchange ex, String referencia, boolean simular, String metodo) throws Exception {
+        if (online == null) throw new HttpErro(404, "O pagamento online não está ativado.");
+        Aluno a = aluno(ex);   // 401 antes de qualquer outra coisa
+        try {
+            if (simular) {
+                exigir(ex, "POST");
+                if (!online.gateway().demonstracao()) throw new HttpErro(404, "Rota não encontrada.");
+                JsonObject corpo = corpoJson(ex);
+                JsonElement aprovar = corpo.get("aprovar");
+                json(ex, 200, online.simular(a, referencia, aprovar != null && aprovar.isJsonPrimitive() && aprovar.getAsBoolean()));
+            } else if ("GET".equals(metodo)) {
+                json(ex, 200, online.estado(a, referencia));
+            } else {
+                exigir(ex, "POST");
+                JsonObject corpo = corpoJson(ex);
+                json(ex, 200, online.iniciar(a, referencia, texto(corpo, "metodo"), texto(corpo, "retorno")));
+            }
+        } catch (ServicoPagamentoOnline.LimiteExcedido e) {
+            throw new HttpErro(429, e.getMessage());
+        } catch (IllegalStateException e) {
+            // Gateway fora do ar ou recusou: a mensagem já é própria para o aluno. 503 = tente de novo mais tarde.
+            throw new HttpErro(503, e.getMessage());
+        }
+    }
+
+    /**
+     * POST /api/pagamentos/webhook/mercadopago. Rota pública (o Mercado Pago não faz login). É segura porque o corpo do aviso
+     * nunca é usado como prova: confere-se a assinatura e o pagamento é consultado na API do Mercado Pago com o token da academia.
+     */
+    private void webhook(HttpExchange ex) throws Exception {
+        if (online == null) throw new HttpErro(404, "O pagamento online não está ativado.");
+        byte[] bytes = ex.getRequestBody().readNBytes(MAX_CORPO_WEBHOOK + 1);
+        if (bytes.length > MAX_CORPO_WEBHOOK) throw new HttpErro(413, "Requisição grande demais.");
+        Map<String, String> cabecalhos = new HashMap<>();
+        ex.getRequestHeaders().forEach((k, v) -> { if (!v.isEmpty()) cabecalhos.put(k.toLowerCase(Locale.ROOT), v.get(0)); });
+        try {
+            online.notificar(cabecalhos, ex.getRequestURI().getRawQuery(), new String(bytes, StandardCharsets.UTF_8));
+        } catch (SecurityException e) {
+            throw new HttpErro(401, "Assinatura inválida.");
+        }
         json(ex, 200, Map.of("ok", true));
     }
 

@@ -27,6 +27,11 @@ Leia antes `ARQUITETURA.md`. Caminhos do Java são relativos a `software/src/mai
 | Caixas de confirmação/aviso/erro | `ui/CaixaMensagem.java` (chamada só por `UI.confirmar`, `UI.info`, `UI.erro`) |
 | Aplicativo com ícone (empacotar, atalho, ícone das janelas) | `software/empacotar.bat`, `software/empacotamento/`, `ui/IconeApp.java`, `docs/APLICATIVO.md` |
 | Aviso de cobrança (WhatsApp/e-mail) | `ui/panels/AvisoCobrancaDialog.java` (janela) + `service/MensagemCobranca.java` (texto e links, testado) + botão "Avisar aluno" em `PagamentosPanel` |
+| Pagamento online (regras, proteções, baixa) | `online/ServicoPagamentoOnline.java` (testado em `TestesPagamentoOnline`) |
+| Integração com o Mercado Pago / modo demonstração | `online/MercadoPagoGateway.java` / `online/SimuladoGateway.java`; escolha em `online/PagamentoOnline.java` |
+| Tabela das transações online | `dao/TransacaoDAO.java` + `database/schema.sql` |
+| Tela de pagamento do aluno no site | `site/pages/pagamento.html`, `site/assets/js/pagamento.js`, `checkout-demo.html` (demonstração) |
+| Aviso de pagamento novo e conferência online no software | `ui/panels/PagamentosPanel.java` (faixa e verificação) + `ConferenciaOnlineDialog.java` |
 | Coluna "Financeiro" da lista de alunos | `AlunosPanel` + `HistoricoPagamentos.situacaoFinanceira` |
 | Números do dashboard (fórmulas) | `service/Indicadores.java` (testado) + `dao/DashboardDAO.java` (só leitura do banco) |
 | Cards do painel inicial do professor | `ui/panels/ResumoPanel.java` + `dao/ResumoDAO.java` |
@@ -94,6 +99,7 @@ escritos como reserva caso a API esteja fora do ar; atualize-os também.
 `software/src/test/java/br/com/vidaativa/`:
 - `TestesLogica`: preços, validações, senha, token. Sem banco.
 - `TestesApi`: sobe a API numa porta aleatória com dados em memória e testa as rotas. Sem banco.
+- `TestesPagamentoOnline`: pagamento online (fluxo, valor sempre do banco, isolamento entre alunos, webhook forjado/repetido, 12 threads pagando ao mesmo tempo, Mercado Pago simulado). Sem banco.
 
 As telas e os DAOs ainda não têm teste automático: teste-os abrindo o software com o banco de demonstração.
 

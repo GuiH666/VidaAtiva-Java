@@ -148,3 +148,240 @@
     color: #A5A99D;
     line-height: 1.6;
 }
+
+/* ===== Pagamento online (Pix e cartão) ===== */
+.fatura.com-acao {
+    grid-template-columns: 1fr auto auto auto;
+}
+
+.btn-pagar {
+    padding: 8px 16px;
+    border: 1px solid var(--painel-marca);
+    border-radius: var(--raio-controle);
+    background: var(--painel-marca);
+    color: #0E0F0B;
+    font: 600 13px var(--fonte-interface);
+    cursor: pointer;
+}
+
+.btn-pagar:hover,
+.btn-pagar:focus-visible {
+    background: var(--painel-marca-escura);
+    border-color: var(--painel-marca-escura);
+    color: #fff;
+}
+
+.aviso-demo {
+    margin: 0 0 16px;
+    padding: 10px 12px;
+    border: 1px solid #8A6D1F;
+    background: #2A2310;
+    color: #E6C780;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.metodos {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.metodo-opcao {
+    display: grid;
+    gap: 4px;
+    width: 100%;
+    padding: 14px 16px;
+    text-align: left;
+    border: 1px solid var(--painel-linha);
+    border-radius: var(--raio-controle);
+    background: transparent;
+    color: var(--painel-texto);
+    cursor: pointer;
+}
+
+.metodo-opcao b {
+    color: #fff;
+    font-size: 15px;
+}
+
+.metodo-opcao span {
+    color: var(--painel-texto-suave);
+    font-size: 13px;
+}
+
+.metodo-opcao:hover:not(:disabled),
+.metodo-opcao:focus-visible {
+    border-color: var(--painel-marca);
+}
+
+.metodo-opcao:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.nota-seguranca {
+    margin: 14px 0 0;
+    color: #A5A99D;
+    font-size: 12.5px;
+    line-height: 1.55;
+}
+
+.qr-area {
+    display: flex;
+    justify-content: center;
+    padding: 18px 0 8px;
+}
+
+.qr-area img {
+    padding: 8px;
+    background: #fff;
+    border-radius: var(--raio-controle);
+}
+
+.qr-vazio {
+    display: grid;
+    place-content: center;
+    width: 190px;
+    height: 190px;
+    border: 1px dashed var(--painel-linha);
+    border-radius: var(--raio-controle);
+    color: var(--painel-texto-suave);
+    font-size: 14px;
+    text-align: center;
+}
+
+.passo-pix {
+    margin: 12px 0;
+    color: #A5A99D;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.copia-cola {
+    display: flex;
+    gap: 8px;
+}
+
+.copia-cola input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--painel-linha);
+    border-radius: var(--raio-controle);
+    background: #0E0F0B;
+    color: var(--painel-texto);
+    font: 12.5px ui-monospace, Consolas, monospace;
+}
+
+.btn-copiar {
+    padding: 10px 16px;
+    border: 1px solid var(--painel-marca);
+    border-radius: var(--raio-controle);
+    background: transparent;
+    color: var(--painel-marca);
+    font: 600 13px var(--fonte-interface);
+    cursor: pointer;
+}
+
+.btn-copiar:hover {
+    background: var(--painel-marca);
+    color: #0E0F0B;
+}
+
+.espera {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    color: var(--painel-texto-suave);
+    font-size: 13px;
+}
+
+.pulso {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--painel-marca);
+    animation: pulsar 1.4s ease-in-out infinite;
+}
+
+@keyframes pulsar {
+    0%, 100% { opacity: 0.25; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pulso { animation: none; }
+}
+
+.resultado {
+    padding: 28px 8px 8px;
+    text-align: center;
+}
+
+.resultado h2 {
+    margin: 14px 0 8px;
+    color: #fff;
+    font: normal 24px var(--fonte-titulo);
+}
+
+.resultado p {
+    margin: 0;
+    color: #A5A99D;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.resultado-icone {
+    display: grid;
+    place-content: center;
+    width: 58px;
+    height: 58px;
+    margin: 0 auto;
+    border: 2px solid var(--painel-marca);
+    border-radius: 50%;
+    color: var(--painel-marca);
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.resultado-erro .resultado-icone {
+    border-color: #C26A6A;
+    color: #E9A0A0;
+}
+
+.resultado-info .resultado-icone {
+    border-color: #D6A94A;
+    color: #E6C780;
+}
+
+.btn-principal-aluno[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.demo-conteudo {
+    max-width: 520px;
+}
+
+.demo-painel .btn-secundario-aluno,
+.demo-painel .btn-principal-aluno {
+    margin-top: 12px;
+}
+
+@media (max-width: 760px) {
+    .fatura.com-acao {
+        grid-template-columns: 1fr auto;
+    }
+
+    .fatura.com-acao .btn-pagar {
+        grid-column: 1 / -1;
+    }
+}
+
+/* O atributo hidden precisa vencer regras de display deste CSS e do base.css (ex.: img { display: block }). */
+.pagina-pagamento [hidden] {
+    display: none !important;
+}

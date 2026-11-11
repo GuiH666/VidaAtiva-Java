@@ -25,7 +25,7 @@ if not exist lib\gson-2.13.1.jar (
 
 if exist out-testes rmdir /s /q out-testes
 mkdir out-testes
-javac -encoding UTF-8 -cp "lib\*" -sourcepath "src\main\java;src\test\java" -d out-testes src\test\java\br\com\vidaativa\TestesLogica.java src\test\java\br\com\vidaativa\TestesApi.java
+javac -encoding UTF-8 -cp "lib\*" -sourcepath "src\main\java;src\test\java" -d out-testes src\test\java\br\com\vidaativa\TestesLogica.java src\test\java\br\com\vidaativa\TestesApi.java src\test\java\br\com\vidaativa\TestesPagamentoOnline.java
 if errorlevel 1 (
   echo [ERRO] Falha ao compilar.
   pause
@@ -38,5 +38,8 @@ java -cp "out-testes;lib\*" br.com.vidaativa.TestesLogica
 echo.
 echo === TestesApi ===
 java -cp "out-testes;lib\*" br.com.vidaativa.TestesApi
+echo.
+echo === TestesPagamentoOnline ===
+java -cp "out-testes;lib\*" br.com.vidaativa.TestesPagamentoOnline
 echo.
 pause

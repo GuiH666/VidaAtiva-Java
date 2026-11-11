@@ -65,6 +65,15 @@ public final class AppConfig {
         p.setProperty("api.autostart", "true");
         p.setProperty("api.secret", "");
         p.setProperty("api.cors.origin", "*");
+        // Pagamento online (Pix/cartão no site do aluno). "desligado" = só a recepção recebe, como antes.
+        p.setProperty("pagamento.provedor", "desligado");
+        p.setProperty("pagamento.url_site", "");
+        p.setProperty("pagamento.url_api_publica", "");
+        p.setProperty("pagamento.pix.minutos", "30");
+        p.setProperty("pagamento.cartao.minutos", "120");
+        p.setProperty("pagamento.mp.access_token", "");
+        p.setProperty("pagamento.mp.webhook_secret", "");
+        p.setProperty("pagamento.mp.url_base", "https://api.mercadopago.com");
 
         // Se -Dvidaativa.config foi informado, SÓ esse caminho é tentado (não cai nos locais padrão). Se o arquivo
         // não existir, nada é avisado e os padrões são usados.
@@ -94,6 +103,9 @@ public final class AppConfig {
         sobrescrever(p, "api.autostart", "VIDAATIVA_API_AUTOSTART");
         sobrescrever(p, "api.secret", "VIDAATIVA_API_SECRET");
         sobrescrever(p, "api.cors.origin", "VIDAATIVA_CORS_ORIGIN");
+        sobrescrever(p, "pagamento.provedor", "VIDAATIVA_PAGAMENTO_PROVEDOR");
+        sobrescrever(p, "pagamento.mp.access_token", "VIDAATIVA_MP_ACCESS_TOKEN");
+        sobrescrever(p, "pagamento.mp.webhook_secret", "VIDAATIVA_MP_WEBHOOK_SECRET");
         return p;
     }
 
@@ -113,4 +125,27 @@ public final class AppConfig {
     public static boolean apiAutostart() { return Boolean.parseBoolean(PROPS.getProperty("api.autostart").trim()); }
     public static String apiSecret() { return PROPS.getProperty("api.secret").trim(); }
     public static String corsOrigin() { return PROPS.getProperty("api.cors.origin").trim(); }
+
+    // ---- Pagamento online (veja docs/PAGAMENTO-ONLINE.md). O access token é SECRETO: nunca o escreva em log nem no código. ----
+    /** "desligado" (padrão), "simulado" (demonstração, sem dinheiro) ou "mercadopago". */
+    public static String pagamentoProvedor() { return PROPS.getProperty("pagamento.provedor").trim().toLowerCase(); }
+    /** Endereço do site dos alunos (ex.: https://www.suaacademia.com.br); vazio = aceita o que o site informar. */
+    public static String pagamentoUrlSite() { return PROPS.getProperty("pagamento.url_site").trim(); }
+    /** Endereço público HTTPS da API, para o Mercado Pago avisar pagamentos (webhook); vazio = só conferência periódica. */
+    public static String pagamentoUrlApiPublica() { return PROPS.getProperty("pagamento.url_api_publica").trim(); }
+    public static int pagamentoPixMinutos() { return inteiro("pagamento.pix.minutos", 30, 5, 1440); }
+    public static int pagamentoCartaoMinutos() { return inteiro("pagamento.cartao.minutos", 120, 10, 2820); }
+    public static String mpAccessToken() { return PROPS.getProperty("pagamento.mp.access_token").trim(); }
+    public static String mpWebhookSecret() { return PROPS.getProperty("pagamento.mp.webhook_secret").trim(); }
+    public static String mpUrlBase() { return PROPS.getProperty("pagamento.mp.url_base").trim(); }
+
+    /** Lê um número da configuração; se estiver vazio, inválido ou fora do intervalo, usa o padrão (sem derrubar o programa). */
+    private static int inteiro(String chave, int padrao, int min, int max) {
+        try {
+            int v = Integer.parseInt(PROPS.getProperty(chave).trim());
+            return v < min || v > max ? padrao : v;
+        } catch (NumberFormatException e) {
+            return padrao;
+        }
+    }
 }

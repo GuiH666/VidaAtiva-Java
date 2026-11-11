@@ -45,7 +45,9 @@ cadastro de aluno/funcionário/professor, geração de mensalidades, registrar p
 
 ## 4. Funcionalidades que ainda não existem
 
-- [ ] Pagamento online (hoje o aluno só consulta; recebimento é feito na recepção).
+- [x] *(v3.5)* Pagamento online por Pix e cartão no site, contabilizado no software (`PAGAMENTO-ONLINE.md`). **Falta**: testar com a conta real
+      do Mercado Pago (credenciais de teste primeiro), rodar `TransacaoDAO` num MySQL real e expor o webhook em endereço https público.
+- [ ] Reembolso/estorno pelo software e recibo por e-mail do pagamento online.
 - [ ] Recuperação de senha do aluno por e-mail.
 - [ ] Relatórios: o dashboard do gerente já mostra inadimplência e alunos por plano; faltam exportar (PDF/CSV) e a evolução de avaliações.
 - [ ] Cadastro de planos pelo software (hoje só direto no banco).

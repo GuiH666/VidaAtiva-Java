@@ -48,6 +48,12 @@ Quem abre: a recepção (ou o professor/aluno, por ela). Quem trata: o grupo de 
 - Cobrança errada e ainda não paga: em **Pagamentos**, cancele a cobrança e gere novamente. Cobrança paga não pode ser cancelada.
 - Gerar duas vezes no mês não duplica (uma cobrança por aluno por mês).
 
+**Aluno pagou online e a mensalidade não ficou paga**
+1. Veja se o software está aberto (a API e a conferência de 30 s rodam dentro dele). Sem webhook público, o aluno pode esperar até ~30 s.
+2. Em **Pagamentos** aparece a faixa amarela se o pagamento precisa de conferência (cobrança já paga/cancelada ou valor diferente). Abra *Conferir*.
+3. Se nada aparece e passou de 5 minutos: confira no painel do Mercado Pago se o pagamento foi aprovado; se sim, use **Registrar pagamento** e registre como P2.
+4. Dinheiro cobrado em duplicidade: devolva pelo painel do Mercado Pago e marque como conferido (o software não devolve sozinho).
+
 **API ou banco fora do ar (P1)**
 1. Confira se o MySQL está rodando e se `config.properties` tem usuário e senha corretos.
 2. Reabra o software; a API sobe junto. Porta 8080 ocupada: ajuste `api.port` e o endereço em `site/assets/js/config.js`.

@@ -44,15 +44,76 @@
                 </div>
             </article>
 
-            <article class="painel checkout-painel">
-                <div class="painel-header"><div><h2>Como pagar</h2><p>O pagamento é feito na recepção da academia.</p></div></div>
-                <div class="valor-fatura"><span>Mensalidade</span><strong id="valorMensalidade">—</strong></div>
-                <div class="linha-info"><span>Próximo vencimento</span><strong id="proximoVencimento">—</strong></div>
-                <div class="linha-info"><span>Forma de pagamento cadastrada</span><strong id="formaCadastrada">—</strong></div>
-                <p class="instrucoes-pagamento">
-                    Pague na recepção (Pix, cartão, boleto ou dinheiro). Assim que o funcionário registrar o recebimento,
-                    a fatura passa para <strong>Paga</strong> aqui automaticamente. Para mudar a forma de pagamento, fale com a recepção.
-                </p>
+            <article class="painel checkout-painel" id="painelCheckout">
+                <!-- Estado 1: resumo (ou instrução de pagar na recepção, se o pagamento online estiver desligado) -->
+                <div id="vResumo">
+                    <div class="painel-header"><div><h2 id="resumoTitulo">Como pagar</h2><p id="resumoSub">O pagamento é feito na recepção da academia.</p></div></div>
+                    <div class="valor-fatura"><span>Mensalidade</span><strong id="valorMensalidade">—</strong></div>
+                    <div class="linha-info"><span>Próximo vencimento</span><strong id="proximoVencimento">—</strong></div>
+                    <div class="linha-info"><span>Forma de pagamento cadastrada</span><strong id="formaCadastrada">—</strong></div>
+                    <p class="instrucoes-pagamento" id="instrucoes">
+                        Pague na recepção (Pix, cartão, boleto ou dinheiro). Assim que o funcionário registrar o recebimento,
+                        a fatura passa para <strong>Paga</strong> aqui automaticamente. Para mudar a forma de pagamento, fale com a recepção.
+                    </p>
+                </div>
+
+                <!-- Aviso de demonstração (aparece em todos os estados quando o servidor está em modo demonstração) -->
+                <p class="aviso-demo" id="avisoDemo" hidden>MODO DEMONSTRAÇÃO: nenhum valor é cobrado de verdade.</p>
+
+                <!-- Estado 2: escolher Pix ou cartão -->
+                <div id="vEscolha" hidden>
+                    <div class="painel-header"><div><h2>Pagar online</h2><p id="escolhaMes">—</p></div></div>
+                    <div class="valor-fatura"><span>Valor</span><strong id="escolhaValor">—</strong></div>
+                    <div class="metodos">
+                        <button type="button" class="metodo-opcao" id="btnPix">
+                            <b>Pix</b><span>Aprovação na hora. Pague no aplicativo do seu banco.</span>
+                        </button>
+                        <button type="button" class="metodo-opcao" id="btnCartao">
+                            <b>Cartão de crédito ou débito</b><span>Você vai para a página segura do pagamento.</span>
+                        </button>
+                    </div>
+                    <p class="nota-seguranca">Seus dados de cartão são digitados somente na página do processador de pagamentos. A Vida Ativa nunca vê nem guarda o número do seu cartão.</p>
+                    <button type="button" class="btn-secundario-aluno" id="btnEscolhaVoltar">Voltar</button>
+                </div>
+
+                <!-- Estado 3: Pix gerado -->
+                <div id="vPix" hidden>
+                    <div class="painel-header"><div><h2>Pague com Pix</h2><p id="pixMes">—</p></div></div>
+                    <div class="valor-fatura"><span>Valor</span><strong id="pixValor">—</strong></div>
+                    <div class="qr-area">
+                        <img id="pixQr" alt="QR Code do Pix" width="190" height="190" hidden>
+                        <div id="pixQrVazio" class="qr-vazio" hidden>QR Code<br><small>(não disponível em demonstração)</small></div>
+                    </div>
+                    <p class="passo-pix">Abra o aplicativo do seu banco, escolha <b>Pix &gt; Pix Copia e Cola</b> e cole o código abaixo.</p>
+                    <div class="copia-cola">
+                        <input type="text" id="pixCodigo" readonly aria-label="Código Pix copia e cola">
+                        <button type="button" class="btn-copiar" id="btnCopiar">Copiar</button>
+                    </div>
+                    <div class="espera" role="status"><i class="pulso"></i><span id="pixEspera">Aguardando o pagamento…</span></div>
+                    <button type="button" class="btn-secundario-aluno" id="btnSimularPix" hidden>Simular pagamento aprovado (demonstração)</button>
+                    <button type="button" class="btn-secundario-aluno" id="btnPixVoltar">Voltar às faturas</button>
+                </div>
+
+                <!-- Estado 4: cartão (página do gateway) -->
+                <div id="vCartao" hidden>
+                    <div class="painel-header"><div><h2>Pague com cartão</h2><p id="cartaoMes">—</p></div></div>
+                    <div class="valor-fatura"><span>Valor</span><strong id="cartaoValor">—</strong></div>
+                    <p class="passo-pix">Você será levado à página segura do pagamento. Depois de pagar, volte para esta página: a fatura será atualizada automaticamente.</p>
+                    <a class="btn-principal-aluno" id="btnIrCartao" href="#" rel="noopener">Ir para o pagamento seguro</a>
+                    <div class="espera" role="status"><i class="pulso"></i><span id="cartaoEspera">Aguardando o pagamento…</span></div>
+                    <button type="button" class="btn-secundario-aluno" id="btnCartaoVoltar">Voltar às faturas</button>
+                </div>
+
+                <!-- Estado 5: resultado -->
+                <div id="vResultado" hidden>
+                    <div class="resultado" id="resultadoBox">
+                        <div class="resultado-icone" id="resultadoIcone" aria-hidden="true">✓</div>
+                        <h2 id="resultadoTitulo">Pagamento confirmado!</h2>
+                        <p id="resultadoTexto"></p>
+                    </div>
+                    <button type="button" class="btn-principal-aluno" id="btnResultadoOk">Voltar às faturas</button>
+                    <button type="button" class="btn-secundario-aluno" id="btnResultadoTentar" hidden>Tentar de novo</button>
+                </div>
             </article>
         </section>
     </main>

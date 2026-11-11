@@ -12,3 +12,21 @@ api.autostart=true
 api.secret=troque-este-segredo-por-algo-longo-e-aleatorio
 # Endereço do site (CORS). Ex.: http://localhost:5500 (Live Server) ou http://localhost:8000
 api.cors.origin=*
+
+# ---------------------------------------------------------------------------------------------
+# PAGAMENTO ONLINE (Pix e cartão no site do aluno). Guia completo: docs/PAGAMENTO-ONLINE.md
+# desligado   = como antes: só a recepção recebe (padrão)
+# simulado    = DEMONSTRAÇÃO: nenhum dinheiro é cobrado e o botão "simular" dá baixa de verdade. NÃO use com alunos reais.
+# mercadopago = pagamento real pelo Mercado Pago (precisa da conta e do token da academia)
+pagamento.provedor=desligado
+# Endereço do site dos alunos, se quiser travar o retorno do cartão (ex.: https://www.suaacademia.com.br). Vazio = aceita o do site.
+pagamento.url_site=
+# Só para Mercado Pago: access token da conta (SECRETO; comece com o de TESTE). Prefira a variável de ambiente VIDAATIVA_MP_ACCESS_TOKEN.
+pagamento.mp.access_token=
+# Segredo da assinatura dos avisos (painel do Mercado Pago > Webhooks). Variável: VIDAATIVA_MP_WEBHOOK_SECRET.
+pagamento.mp.webhook_secret=
+# Endereço PÚBLICO https da API, para o Mercado Pago avisar na hora (webhook). Vazio = a API confere sozinha a cada 30 s.
+pagamento.url_api_publica=
+# Validade do Pix e da página de cartão, em minutos (cartão: no máximo 2820 = 47 h).
+pagamento.pix.minutos=30
+pagamento.cartao.minutos=120
