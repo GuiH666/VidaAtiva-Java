@@ -70,6 +70,8 @@ Toda mudança passa por: necessidade → teste automático → revisão por outr
 | ID | Data | Mudança | Risco | Teste / evidência | Decisão |
 |---|---|---|---|---|---|
 | RFC-001 | 04/11/2026 | Validação dos dígitos do CPF e gravação com máscara padrão (`Validacao.documento`, `AlunoDAO`, `seed.sql`) | Médio: pode recusar cadastros antes aceitos | 6 testes novos falhavam antes (45 ok / 6 falhas) e passam depois (51 ok / 0 falha) | Implementada; pendente de revisão por outro integrante e de homologação do PO |
+| RFC-002 | 22/11/2026 | Limite de tentativas de "senha atual" em `POST /api/aluno/me/senha` (`ApiServer`) | Baixo: aluno que errar 5 vezes espera até 10 minutos | 3 verificações novas em `TestesApi` (429 após várias falhas, bloqueio por aluno) | Implementada; pendente de revisão por outro integrante |
+| RFC-003 | 22/11/2026 | `PagamentoDAO` (duplicidade só pelo código 1062; mensagens de `cancelar`) e `FuncionarioDAO.definirAtivo` (gerente protegido) | Médio: SQL novo sem teste em MySQL real | 8 verificações em `TestesDao` para a detecção de duplicidade; o SQL só será exercitado no teste com o banco real | Implementada; pendente de teste no MySQL real e de revisão |
 
 Cuidados da RFC-001 ao atualizar um banco que já tem dados:
 - O aluno de demonstração tinha CPF `000.000.000-00` (inválido). Rodar o `seed.sql` de novo troca para `529.982.247-25`.

@@ -1,5 +1,7 @@
 # Vida Ativa
 
+[![Testes](https://github.com/GuiH666/VidaAtiva-Java/actions/workflows/testes.yml/badge.svg)](https://github.com/GuiH666/VidaAtiva-Java/actions/workflows/testes.yml) ![Java 21](https://img.shields.io/badge/Java-21-orange) ![MySQL 8](https://img.shields.io/badge/MySQL-8-blue) ![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-green)
+
 Sistema para academia em três partes que usam **um único banco MySQL**:
 
 | Parte | O que é | Quem usa | Pasta |
@@ -59,6 +61,16 @@ Requisitos: **JDK 21+** (`javac -version`) e **MySQL 8**.
 4. **Site**: abra `site/pages/home.html` com a extensão *Live Server* do VS Code (ou `python -m http.server 8000` dentro de `site/`).
    O software precisa estar aberto, porque a API roda nele.
 
+## Telas
+
+| Painel do gerente | Fichas de treino |
+|---|---|
+| ![Painel do gerente](docs/img/gerente.png) | ![Editor de ficha com biblioteca de exercícios](docs/img/ficha-biblioteca.png) |
+
+| Pagamento por Pix no site do aluno | Conferência dos pagamentos online no software |
+|---|---|
+| ![Site do aluno com Pix em modo demonstração](docs/img/pagamento-online-celular.png) | ![Conferência de pagamentos online](docs/img/software-conferencia.png) |
+
 ### Usuários de demonstração (senha `123456`)
 
 | Usuário | Perfil | Entra em |
@@ -73,8 +85,18 @@ Requisitos: **JDK 21+** (`javac -version`) e **MySQL 8**.
 
 ## Testes
 
-`software/testar.bat` (ou `./testar.sh`): roda `TestesLogica` (regras, validação, senha, token, números do dashboard e da recepção, histórico de pagamentos, aviso de cobrança, biblioteca de exercícios) e `TestesApi`
-(todas as rotas, com dados em memória, sem precisar de MySQL) e `TestesPagamentoOnline` (pagamento online: regras, concorrência, Mercado Pago simulado). Esperado: `0 falha(s)`.
+`software/testar.bat` (ou `./testar.sh`) roda quatro grupos, todos sem MySQL e sem internet (303 verificações na v3.6):
+
+| Grupo | O que cobre |
+|---|---|
+| `TestesLogica` | regras, validação, senha, token, números do dashboard e da recepção, histórico de pagamentos, aviso de cobrança, biblioteca de exercícios |
+| `TestesApi` | todas as rotas, com dados em memória; limites de tentativas de login e de troca de senha |
+| `TestesPagamentoOnline` | pagamento online: regras, concorrência, Mercado Pago simulado |
+| `TestesDao` | regras dos DAOs que não dependem do banco (detecção de duplicidade, mensagens de erro) |
+
+Esperado: `0 falha(s)` em todos. O GitHub Actions roda isso a cada push e Pull Request.
+
+**O que os testes não provam:** o SQL dos DAOs, o Mercado Pago real e o aplicativo no Windows ainda não foram exercitados de ponta a ponta (veja `docs/PROXIMOS-PASSOS.md`, seção 2).
 
 ## Regras de negócio (resumo)
 
@@ -85,6 +107,10 @@ Requisitos: **JDK 21+** (`javac -version`) e **MySQL 8**.
 - **Mensalidade**: uma cobrança por aluno por mês; pendente vencida vira Atrasada; ao registrar pagamento o vencimento avança um mês.
 
 Detalhes e fluxos em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
+
+## Versões
+
+O histórico de mudanças está em [`CHANGELOG.md`](CHANGELOG.md). O projeto é de uma atividade acadêmica em grupo (Os TraKinEirOs) e está licenciado sob a [MIT](LICENSE).
 
 ## Para quem vai continuar o projeto
 

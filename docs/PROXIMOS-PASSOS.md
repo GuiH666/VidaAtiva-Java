@@ -26,10 +26,10 @@ cadastro de aluno/funcionário/professor, geração de mensalidades, registrar p
       seria tratado como CPF; alunos antigos gravados sem máscara não colidem com os novos (veja `OPERACAO.md`, seção 5).
 - [ ] *(achado na revisão)* `FichaTreinoDAO.salvar`: o UPDATE não grava `professor_id` (a ficha continua no nome de quem criou).
       Provavelmente intencional, confirmar.
-- [ ] *(achado na revisão)* `FuncionarioDAO.definirAtivo` não impede desativar o gerente (só o `PessoalPanel` bloqueia).
-- [ ] *(achado na revisão)* `PagamentoDAO.inserirMensalidade` trata qualquer violação de integridade como "já existe",
-      o que esconderia também uma violação de chave estrangeira.
-- [ ] *(achado na revisão)* `PagamentoDAO.cancelar` mostra "só é possível cancelar cobranças não pagas" até quando o id não existe.
+- [x] *(corrigido na v3.6, RFC-003)* `FuncionarioDAO.definirAtivo` não desativa o gerente (o `UPDATE` exclui o perfil GERENTE); a tela continua avisando.
+- [x] *(corrigido na v3.6, RFC-003)* `PagamentoDAO.inserirMensalidade` só trata o código 1062 (valor repetido) como "já existe";
+      violação de chave estrangeira agora sobe como erro (`Sql.ehChaveDuplicada`, testado em `TestesDao`).
+- [x] *(corrigido na v3.6, RFC-003)* `PagamentoDAO.cancelar` diferencia cobrança inexistente de cobrança já paga. Não testado contra MySQL real.
 - [ ] *(achado na revisão)* Listagens de pagamentos e o resumo fazem `UPDATE` (marcar atrasados) dentro de uma leitura.
 - [ ] *(achado na revisão)* `AlunoDAO.atualizar` não avisa se o id não existe; regras "ficha só para Plus/Premium" e
       "avaliação só para Premium" estão só nas telas, não nos DAOs nem na API.
@@ -37,7 +37,7 @@ cadastro de aluno/funcionário/professor, geração de mensalidades, registrar p
 - [ ] *(achado na revisão)* `LoginFrame` e `ResumoPanel` consultam o banco na thread da interface (a tela pode "travar"
       por instantes se o banco demorar). Usar `SwingWorker`.
 - [ ] *(achado na revisão)* Token da API não pode ser revogado (trocar a senha não invalida; vale 8 h). Limite de login é por IP
-      e o mapa de falhas nunca é limpo; `/senha` não tem limite de tentativas.
+      e o mapa de falhas nunca é limpo. *(v3.6, RFC-002: `/senha` agora tem limite de 5 erros em 10 minutos por aluno.)*
 - [ ] *(achado na revisão)* `PasswordUtil.precisaAtualizar` só olha o prefixo: se o número de iterações aumentar,
       hashes antigos não são regravados.
 - [ ] *(achado na revisão)* `AppConfig`: se `-Dvidaativa.config` apontar para arquivo inexistente, usa os padrões em silêncio.
