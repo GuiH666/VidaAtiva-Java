@@ -69,6 +69,9 @@ import java.util.concurrent.TimeUnit;
  * zera o contador daquele IP. A contagem fica só em memória: reiniciar a API libera todo mundo. Se a API ficar atrás de
  * um proxy reverso, todos os usuários aparecerão com o IP do proxy e dividirão o mesmo limite.
  *
+ * A troca de senha ({@code POST /api/aluno/me/senha}) usa o mesmo mecanismo, contando por aluno os erros de "senha atual":
+ * depois de 5 erros em 10 minutos a API responde 429.
+ *
  * <h2>CORS</h2>
  * O navegador só deixa o site (que roda em outro endereço/porta que a API) ler as respostas se a API autorizar a origem
  * dele. A origem permitida é o {@code api.cors.origin} do config.properties; vazio ou "*" libera qualquer origem (bom
@@ -312,10 +315,18 @@ public class ApiServer {
         // O token é validado ANTES de ler o corpo: quem não está logado é rejeitado (401) sem a API sequer processar o
         // conteúdo enviado.
         Aluno a = aluno(ex);
+        // Quem roubou um token válido poderia chutar a "senha atual" à vontade (o limite do login só vale para /api/login).
+        // Por isso o erro de senha atual também conta falhas, por aluno, com a mesma janela e o mesmo máximo do login.
+        String chave = "senha:" + a.usuarioId();
+        if (bloqueado(chave)) throw new HttpErro(429, "Muitas tentativas. Aguarde alguns minutos e tente de novo.");
         JsonObject corpo = corpoJson(ex);
         boolean ok = dados.alterarSenha(a.usuarioId(), texto(corpo, "senhaAtual"), texto(corpo, "novaSenha"));
         // 400 e não 401: o aluno ESTÁ logado, o que está errado é o dado enviado.
-        if (!ok) throw new HttpErro(400, "A senha atual está incorreta.");
+        if (!ok) {
+            registrarFalha(chave);
+            throw new HttpErro(400, "A senha atual está incorreta.");
+        }
+        falhasLogin.remove(chave);
         json(ex, 200, Map.of("ok", true));
     }
 

@@ -218,6 +218,15 @@ public class TestesApi {
         check("troca válida = 200", send("POST", "/api/aluno/me/senha", "{\"senhaAtual\":\"123456\",\"novaSenha\":\"novasenha\"}", t).statusCode() == 200);
         check("login com a senha nova funciona", send("POST", "/api/login", "{\"login\":\"pablo\",\"senha\":\"novasenha\"}", null).statusCode() == 200);
         check("login com a senha antiga falha", send("POST", "/api/login", "{\"login\":\"pablo\",\"senha\":\"123456\"}", null).statusCode() == 401);
+
+        // Limite de tentativas na troca de senha (token roubado não pode chutar a senha atual). Usa a Maria para não
+        // bloquear o Pablo nos grupos seguintes.
+        String tm = json(send("POST", "/api/login", "{\"login\":\"maria\",\"senha\":\"abcdef\"}", null)).get("token").getAsString();
+        int ultimo = 0;
+        for (int i = 0; i < 7; i++) ultimo = send("POST", "/api/aluno/me/senha", "{\"senhaAtual\":\"chute" + i + "\",\"novaSenha\":\"novasenha\"}", tm).statusCode();
+        check("várias senhas atuais erradas seguidas = 429", ultimo == 429);
+        check("bloqueada, nem a senha atual certa passa", send("POST", "/api/aluno/me/senha", "{\"senhaAtual\":\"abcdef\",\"novaSenha\":\"outrasenha\"}", tm).statusCode() == 429);
+        check("o bloqueio da troca de senha é por aluno (Pablo segue livre)", send("POST", "/api/aluno/me/senha", "{\"senhaAtual\":\"x\",\"novaSenha\":\"novasenha2\"}", t).statusCode() == 400);
     }
 
     // ---------- limite de tentativas de login ----------
