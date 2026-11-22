@@ -187,8 +187,10 @@ public class PagamentoDAO {
             return true;
         } catch (SQLIntegrityConstraintViolationException e) {
             // Não consultamos antes se já existe: tentamos inserir e deixamos o UNIQUE (aluno_id, referencia) barrar a duplicata.
-            // Qualquer violação de integridade cai aqui (não só a de duplicidade), e todas são tratadas como "já existe".
-            return false; // já existe cobrança desse aluno nesse mês
+            // Só a violação de DUPLICIDADE (1062) significa "já existe". Outras violações de integridade (ex.: aluno
+            // removido, chave estrangeira 1452) são erro de verdade e sobem, em vez de sumirem como se fossem duplicata.
+            if (Sql.ehChaveDuplicada(e)) return false; // já existe cobrança desse aluno nesse mês
+            throw Sql.amigavel(e);
         }
     }
 
@@ -254,13 +256,22 @@ public class PagamentoDAO {
 
     /**
      * Cancela uma cobrança que ainda não foi paga (status CANCELADO; a linha não é apagada).
-     * @throws IllegalStateException se nenhuma linha foi alterada: a cobrança já está paga ou o id não existe
+     * @throws IllegalStateException se nenhuma linha foi alterada: a cobrança já está paga ou o id não existe (mensagens diferentes)
      */
     public void cancelar(int pagamentoId) throws SQLException {
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement("UPDATE pagamentos SET status='CANCELADO' WHERE id=? AND status <> 'PAGO'")) {
             ps.setInt(1, pagamentoId);
-            if (ps.executeUpdate() == 0) throw new IllegalStateException("Só é possível cancelar cobranças que ainda não foram pagas.");
+            if (ps.executeUpdate() == 0) {
+                // Nenhuma linha alterada: ou a cobrança não existe, ou já está paga. Mensagens diferentes para cada caso.
+                try (PreparedStatement q = c.prepareStatement("SELECT 1 FROM pagamentos WHERE id=?")) {
+                    q.setInt(1, pagamentoId);
+                    try (ResultSet rs = q.executeQuery()) {
+                        if (!rs.next()) throw new IllegalStateException("Cobrança não encontrada. Atualize a tela e tente de novo.");
+                    }
+                }
+                throw new IllegalStateException("Só é possível cancelar cobranças que ainda não foram pagas.");
+            }
         }
     }
 

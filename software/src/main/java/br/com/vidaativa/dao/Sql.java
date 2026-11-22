@@ -72,6 +72,14 @@ final class Sql {
     }
 
     /**
+     * É um erro de valor repetido em coluna UNIQUE (código 1062 do MySQL)? Outras violações de integridade, como chave
+     * estrangeira inexistente (1452), NÃO são duplicidade e não devem ser tratadas como "já existe".
+     */
+    static boolean ehChaveDuplicada(SQLException e) {
+        return e.getErrorCode() == 1062;
+    }
+
+    /**
      * Escolhe a mensagem amigável a partir do código de erro do MySQL e do texto da mensagem original.
      * Se o erro não for um dos tratados abaixo, devolve a mensagem original do driver.
      */

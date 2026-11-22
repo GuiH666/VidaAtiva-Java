@@ -17,8 +17,8 @@ import java.util.List;
  * <ul>
  *   <li>cadastrar cria o login (perfil FUNCIONARIO) e a linha de funcionário na mesma transação;</li>
  *   <li>o gerente também tem linha em {@code funcionarios} (perfil GERENTE, cargo "Gerente da Academia"); ele aparece em
- *       {@link #listar()}, mas este DAO só cadastra FUNCIONARIO. A proteção contra desativar o gerente ou o próprio
- *       usuário logado está na tela ({@code PessoalPanel}), não aqui;</li>
+ *       {@link #listar()}, mas este DAO só cadastra FUNCIONARIO. A proteção contra desativar o próprio usuário
+ *       logado está na tela ({@code PessoalPanel}); a de não desativar o gerente existe nas duas camadas;</li>
  *   <li>não há exclusão: desativar ({@link #definirAtivo}) é a forma de "remover" e também bloqueia o login.</li>
  * </ul>
  */
@@ -122,10 +122,11 @@ public class FuncionarioDAO {
     /**
      * Ativa ou desativa o funcionário e o login dele de uma só vez (desativado não consegue entrar no software).
      * Um único UPDATE com JOIN altera as duas tabelas, então não há estado intermediário. Se o id não existir, nada acontece
-     * (sem exceção). Não impede desativar o gerente; essa checagem é feita pela tela.
+     * (sem exceção). O gerente nunca é desativado por aqui: o pedido para desativá-lo é ignorado (a tela também avisa).
      */
     public void definirAtivo(int funcionarioId, boolean ativo) throws SQLException {
-        String sql = "UPDATE funcionarios f JOIN usuarios u ON u.id = f.usuario_id SET f.ativo = ?, u.ativo = ? WHERE f.id = ?";
+        String sql = "UPDATE funcionarios f JOIN usuarios u ON u.id = f.usuario_id SET f.ativo = ?, u.ativo = ? WHERE f.id = ?"
+                + (ativo ? "" : " AND u.perfil <> 'GERENTE'");
         try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setBoolean(1, ativo);
             ps.setBoolean(2, ativo);
