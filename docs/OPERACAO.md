@@ -48,6 +48,17 @@ Quem abre: a recepção (ou o professor/aluno, por ela). Quem trata: o grupo de 
 - Cobrança errada e ainda não paga: em **Pagamentos**, cancele a cobrança e gere novamente. Cobrança paga não pode ser cancelada.
 - Gerar duas vezes no mês não duplica (uma cobrança por aluno por mês).
 
+**Aluno pagou online e a mensalidade não ficou paga**
+1. Veja se o software está aberto (a API e a conferência de 30 s rodam dentro dele). Sem webhook público, o aluno pode esperar até ~30 s.
+2. Em **Pagamentos** aparece a faixa amarela se o pagamento precisa de conferência (cobrança já paga/cancelada ou valor diferente). Abra *Conferir*.
+3. Se nada aparece e passou de 5 minutos: confira no painel do Mercado Pago se o pagamento foi aprovado; se sim, use **Registrar pagamento** e registre como P2.
+4. Dinheiro cobrado em duplicidade: devolva pelo painel do Mercado Pago e marque como conferido (o software não devolve sozinho).
+
+**Erro "Incorrect string value ... for column 'nome'" ao salvar (ficha, aluno...)**
+1. O banco foi criado com outro conjunto de caracteres (não utf8mb4), então não aceita travessão (—), emojis etc.
+2. Rode `database/migrations/v3-1-utf8mb4.sql` (faça backup antes). Ele converte banco e tabelas sem perder dados.
+3. Reabra o software. Se continuar, envie o resultado de `SHOW CREATE TABLE treinos;` e `SHOW VARIABLES LIKE 'character_set%';`.
+
 **API ou banco fora do ar (P1)**
 1. Confira se o MySQL está rodando e se `config.properties` tem usuário e senha corretos.
 2. Reabra o software; a API sobe junto. Porta 8080 ocupada: ajuste `api.port` e o endereço em `site/assets/js/config.js`.
@@ -59,6 +70,8 @@ Toda mudança passa por: necessidade → teste automático → revisão por outr
 | ID | Data | Mudança | Risco | Teste / evidência | Decisão |
 |---|---|---|---|---|---|
 | RFC-001 | 04/11/2026 | Validação dos dígitos do CPF e gravação com máscara padrão (`Validacao.documento`, `AlunoDAO`, `seed.sql`) | Médio: pode recusar cadastros antes aceitos | 6 testes novos falhavam antes (45 ok / 6 falhas) e passam depois (51 ok / 0 falha) | Implementada; pendente de revisão por outro integrante e de homologação do PO |
+| RFC-002 | 22/11/2026 | Limite de tentativas de "senha atual" em `POST /api/aluno/me/senha` (`ApiServer`) | Baixo: aluno que errar 5 vezes espera até 10 minutos | 3 verificações novas em `TestesApi` (429 após várias falhas, bloqueio por aluno) | Implementada; pendente de revisão por outro integrante |
+| RFC-003 | 22/11/2026 | `PagamentoDAO` (duplicidade só pelo código 1062; mensagens de `cancelar`) e `FuncionarioDAO.definirAtivo` (gerente protegido) | Médio: SQL novo sem teste em MySQL real | 8 verificações em `TestesDao` para a detecção de duplicidade; o SQL só será exercitado no teste com o banco real | Implementada; pendente de teste no MySQL real e de revisão |
 
 Cuidados da RFC-001 ao atualizar um banco que já tem dados:
 - O aluno de demonstração tinha CPF `000.000.000-00` (inválido). Rodar o `seed.sql` de novo troca para `529.982.247-25`.

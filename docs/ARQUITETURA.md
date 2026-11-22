@@ -72,6 +72,12 @@ O menu lateral é montado em `ui/DashboardFrame.montarMenu` conforme o perfil de
 3. *Registrar pagamento* marca como Pago e avança o vencimento do aluno em um mês.
 4. O aluno só consulta no site (`pagamento.html`).
 
+**Pagamento online (opcional)**
+1. O aluno toca em *Pagar* em `pagamento.html` → `POST /api/aluno/me/pagamentos/AAAA-MM/online` (Pix ou cartão).
+2. `ServicoPagamentoOnline` grava a transação (`transacoes_pagamento`), chama o gateway (`MercadoPagoGateway`; `SimuladoGateway` na demonstração) e devolve o QR/endereço.
+3. A confirmação chega pelo aluno consultando, pelo webhook ou pela conferência de 30 s; todas passam por `aplicar`, que só baixa se o valor bater e só uma vez.
+4. O software mostra "Pix · online" no histórico, avisa na tela Pagamentos e lista o que precisa de conferência. Veja `PAGAMENTO-ONLINE.md`.
+
 ## Dashboard do gerente
 
 `GerentePainel` pede os dados uma vez ao `DashboardDAO` (alunos, cobranças e resumo) e chama `Indicadores.calcular` para o
@@ -95,4 +101,5 @@ recebido, a receber, em atraso, adimplência) estão no Javadoc de `service/Indi
 - API: limite de 5 erros de login em 10 min por IP (429), corpo máximo de 8 KB, CORS configurável (`api.cors.origin`).
 - Aluno nunca recebe documento, ids internos ou usuário de outra pessoa (records próprios em `ApiServer`).
 - Site: dados entram na tela com `textContent` (evita XSS).
-- Segredos ficam em `software/config.properties` (fora do Git).
+- Segredos (senha do banco, token do Mercado Pago) ficam em `software/config.properties` (fora do Git) ou em variáveis de ambiente.
+- Pagamento online: cartão nunca passa pelo nosso sistema; valor sempre do banco; webhook só vale depois de reconsultar o gateway (`PAGAMENTO-ONLINE.md`, seção 2).

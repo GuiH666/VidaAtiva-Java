@@ -14,7 +14,8 @@ site/
 │   ├── planos.html     Planos e preços (preços vêm da API)
 │   ├── login.html      Login do aluno
 │   ├── aluno.html      Área do aluno: plano, treino, avaliações, pagamentos
-│   └── pagamento.html  Mensalidades (somente consulta)
+│   ├── pagamento.html  Mensalidades: consulta e pagamento por Pix/cartão (se ligado no software)
+│   └── checkout-demo.html  Página que simula o banco/cartão (só modo demonstração)
 └── assets/
     ├── css/            base.css (comum) + um CSS por página
     ├── js/             config.js · api.js (cliente da API) + um JS por página

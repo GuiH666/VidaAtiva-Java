@@ -14,6 +14,13 @@ Rotas com **login** exigem o cabeçalho `Authorization: Bearer <token>` (token r
 | GET | `/api/aluno/me/pagamentos` | sim | – | mensalidades (canceladas não aparecem) |
 | GET | `/api/aluno/me/avaliacoes` | sim | – | avaliações físicas com IMC |
 | POST | `/api/aluno/me/senha` | sim | `{senhaAtual, novaSenha}` | `{ok: true}` |
+| GET | `/api/aluno/me/pagamento-online` | sim | – | `{ativo, provedor, demonstracao, metodos}` (404 nas rotas abaixo se desligado) |
+| POST | `/api/aluno/me/pagamentos/AAAA-MM/online` | sim | `{metodo: "PIX"\|"CARTAO", retorno}` | inicia ou retoma o pagamento: Pix (QR e copia-e-cola) ou endereço do checkout do cartão |
+| GET | `/api/aluno/me/pagamentos/AAAA-MM/online` | sim | – | situação (`AGUARDANDO`, `APROVADA`, `RECUSADA`, `EXPIRADA`, `EM_ANALISE`...) e mensagem |
+| POST | `/api/aluno/me/pagamentos/AAAA-MM/online/simular` | sim | `{aprovar: true\|false}` | **só no modo demonstração** (404 no modo real) |
+| POST | `/api/pagamentos/webhook/mercadopago` | não | aviso do Mercado Pago | `200`; a assinatura é conferida e o pagamento é reconsultado no Mercado Pago |
+
+O valor cobrado **nunca** vem do cliente: um campo `valor` enviado é ignorado. Detalhes em `PAGAMENTO-ONLINE.md`.
 
 ## Códigos HTTP
 
@@ -24,8 +31,8 @@ Rotas com **login** exigem o cabeçalho `Authorization: Bearer <token>` (token r
 | 401 | Sem login, token inválido/expirado, credenciais erradas |
 | 404 | Rota inexistente |
 | 405 | Método HTTP errado para a rota |
-| 413 | Corpo maior que 8 KB |
-| 429 | Mais de 5 erros de login em 10 min (mesmo IP) |
+| 413 | Corpo maior que 8 KB (o aviso do Mercado Pago tem limite próprio, também pequeno) |
+| 429 | Mais de 5 erros de login em 10 min (mesmo IP), ou mais de 8 pagamentos online novos em 10 min (mesmo aluno) |
 | 500 | Erro inesperado (detalhes só no console do software) |
 
 ## Testando sem o site

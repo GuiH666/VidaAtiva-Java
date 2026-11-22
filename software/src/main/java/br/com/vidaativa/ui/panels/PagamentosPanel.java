@@ -2,6 +2,7 @@ package br.com.vidaativa.ui.panels;
 
 import br.com.vidaativa.dao.AlunoDAO;
 import br.com.vidaativa.dao.PagamentoDAO;
+import br.com.vidaativa.dao.TransacaoDAO;
 import br.com.vidaativa.model.Aluno;
 import br.com.vidaativa.model.Pagamento;
 import br.com.vidaativa.service.MensagemCobranca;
@@ -48,6 +49,20 @@ public class PagamentosPanel extends PainelBase {
     /** Histórico do aluno da cobrança selecionada (lado direito da tela). */
     private final HistoricoAlunoPanel historico;
 
+    // --- Pagamento online: faixa de aviso + verificação periódica (só roda enquanto a tela está visível) ---
+    private final TransacaoDAO transacoes = new TransacaoDAO();
+    private final br.com.vidaativa.ui.componentes.Cartao faixa = new br.com.vidaativa.ui.componentes.Cartao(new BorderLayout(14, 0), 10, 16);
+    private final JLabel faixaTexto = new JLabel(" ");
+    private final JButton faixaBotao = Theme.button("Conferir");
+    private final Timer verificador = new Timer(VERIFICA_A_CADA_MS, e -> verificarOnline());
+    private static final int VERIFICA_A_CADA_MS = 15_000;
+    /** Maior id de transação aprovada já visto; -1 = ainda não olhou (a primeira leitura não conta como "novo"). */
+    private int ultimoVisto = -1;
+    private boolean verificando;
+    /** Quantos pagamentos online chegaram desde que a tela foi aberta (aparece na faixa verde). */
+    private int novosOnline;
+    private int aConferir;
+
     public PagamentosPanel() {
         this(new HistoricoAlunoPanel());
     }
@@ -93,6 +108,8 @@ public class PagamentosPanel extends PainelBase {
         filtros.add(filtroStatus, BorderLayout.EAST);
         JPanel topo = new JPanel(new br.com.vidaativa.ui.componentes.PilhaVertical(10));
         topo.setOpaque(false);
+        configurarFaixa();
+        topo.add(faixa);
         topo.add(acoes);
         topo.add(filtros);
 
@@ -122,6 +139,81 @@ public class PagamentosPanel extends PainelBase {
             case "Pendente" -> Theme.WARN;
             default -> Theme.MUTED;
         });
+    }
+
+    // ------------------------------------------------------------------ pagamento online
+
+    private void configurarFaixa() {
+        faixa.setVisible(false);
+        faixaTexto.setFont(Theme.fonte(13.5f, Font.PLAIN));
+        faixaBotao.addActionListener(e -> ConferenciaOnlineDialog.abrir(this, this::verificarOnline));
+        faixa.add(faixaTexto, BorderLayout.CENTER);
+        faixa.add(faixaBotao, BorderLayout.EAST);
+        verificador.setInitialDelay(1500);
+    }
+
+    /** Liga a verificação quando a tela entra na janela e desliga quando sai (não consulta o banco com a tela fechada). */
+    @Override public void addNotify() {
+        super.addNotify();
+        verificador.start();
+    }
+
+    @Override public void removeNotify() {
+        verificador.stop();
+        super.removeNotify();
+    }
+
+    /**
+     * Pergunta ao banco (fora da tela, para ela não travar) se entrou pagamento online novo e se há algo para conferir.
+     * Pagamento novo: a lista é recarregada e a faixa avisa. Algo para conferir: a faixa fica amarela até a recepção resolver.
+     */
+    private void verificarOnline() {
+        if (verificando || !isShowing()) return;
+        verificando = true;
+        new SwingWorker<int[], Void>() {
+            @Override protected int[] doInBackground() {
+                return new int[]{transacoes.ultimaAprovadaId(), transacoes.pendentesDeConferencia().size()};
+            }
+            @Override protected void done() {
+                verificando = false;
+                try {
+                    int[] r = get();
+                    boolean chegouNovo = ultimoVisto >= 0 && r[0] > ultimoVisto;
+                    if (chegouNovo) novosOnline++;
+                    ultimoVisto = Math.max(ultimoVisto, r[0]);
+                    aConferir = r[1];
+                    mostrarFaixa();
+                    if (chegouNovo) recarregar();
+                } catch (Exception ignorado) {
+                    // banco fora do ar: tenta de novo no próximo ciclo, sem incomodar
+                }
+            }
+        }.execute();
+    }
+
+    /** Faixa amarela (algo para conferir) tem prioridade sobre a verde (chegou pagamento). Sem nenhum dos dois, fica escondida. */
+    void mostrarFaixa() {
+        if (aConferir > 0) {
+            faixa.cores(new Color(251, 191, 36, 28), new Color(251, 191, 36, 120));
+            faixaTexto.setForeground(Theme.WARN);
+            faixaTexto.setText(aConferir == 1 ? "1 pagamento online precisa de conferência (não foi baixado sozinho)."
+                    : aConferir + " pagamentos online precisam de conferência (não foram baixados sozinhos).");
+            faixaBotao.setText("Conferir");
+            faixaBotao.setVisible(true);
+        } else if (novosOnline > 0) {
+            faixa.cores(new Color(34, 197, 94, 28), new Color(34, 197, 94, 120));
+            faixaTexto.setForeground(Theme.GREEN);
+            faixaTexto.setText(novosOnline == 1 ? "Chegou 1 pagamento online agora. A lista já foi atualizada."
+                    : "Chegaram " + novosOnline + " pagamentos online desde que você abriu esta tela. A lista já foi atualizada.");
+            faixaBotao.setVisible(false);
+        } else {
+            faixa.setVisible(false);
+            revalidate();
+            return;
+        }
+        faixa.setVisible(true);
+        revalidate();
+        repaint();
     }
 
     /** Verdadeiro enquanto a tabela é refeita, para a seleção automática não recarregar o histórico duas vezes. */

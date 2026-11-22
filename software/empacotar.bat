@@ -33,6 +33,17 @@ if not exist lib\mysql-connector-j-8.4.0.jar (
 if not exist lib\gson-2.13.1.jar goto semlib
 if not exist lib\mysql-connector-j-8.4.0.jar goto semlib
 
+rem O Windows nao deixa apagar/atualizar a pasta dist enquanto o aplicativo estiver aberto.
+:conferir_aberto
+tasklist /fi "imagename eq Vida Ativa.exe" 2>nul | find /i "Vida Ativa.exe" >nul
+if not errorlevel 1 (
+  echo.
+  echo O aplicativo "Vida Ativa" esta ABERTO, e nao da para atualiza-lo enquanto isso.
+  echo Feche o Vida Ativa ^(se precisar, finalize "Vida Ativa.exe" no Gerenciador de Tarefas^) e depois
+  pause
+  goto conferir_aberto
+)
+
 echo [1/4] Compilando...
 if exist out rmdir /s /q out
 mkdir out
@@ -47,12 +58,22 @@ if errorlevel 1 goto erro
 copy /y lib\gson-2.13.1.jar build-app\ >nul
 copy /y lib\mysql-connector-j-8.4.0.jar build-app\ >nul
 
+rem --add-modules: com esta opcao o jpackage NAO detecta modulos sozinho, entao a lista tem que ser COMPLETA (sem java.desktop o programa nao abre: "Failed to launch JVM"). jdk.crypto.ec = HTTPS do pagamento online.
 echo [3/4] Gerando o aplicativo ^(leva 1 a 2 minutos^)...
 if exist "dist\Vida Ativa" rmdir /s /q "dist\Vida Ativa"
+if exist "dist\Vida Ativa" (
+  echo.
+  echo [ERRO] Nao consegui apagar a pasta dist\Vida Ativa porque algo ainda esta usando os arquivos dela.
+  echo        Feche: o aplicativo Vida Ativa, janelas do Explorador de Arquivos abertas nessa pasta e terminais
+  echo        que estejam dentro dela. Se continuar, reinicie o computador e rode este arquivo de novo.
+  pause
+  exit /b 1
+)
 jpackage --type app-image --name "Vida Ativa" --app-version 1.0.0 --vendor "Os TraKinEirOs" ^
   --description "Vida Ativa - Software de Gestao da Academia" ^
   --input build-app --main-jar vida-ativa.jar --main-class br.com.vidaativa.ui.Main ^
   --icon empacotamento\vida-ativa.ico --dest dist ^
+  --add-modules java.base,java.desktop,java.logging,java.management,java.naming,java.net.http,java.sql,java.xml,java.prefs,java.security.sasl,java.transaction.xa,jdk.httpserver,jdk.crypto.ec,jdk.charsets,jdk.localedata,jdk.unsupported ^
   --java-options "-Dfile.encoding=UTF-8"
 if errorlevel 1 goto erro
 if not exist "dist\Vida Ativa\Vida Ativa.exe" goto erro
